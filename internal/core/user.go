@@ -5,15 +5,14 @@ import (
 )
 
 type User struct {
-	Id           uint
-	FirstName    string
-	LastName     string
-	Email        string
-	Username     string
-	Password     string
-	CreatedAt    time.Time
-	UpdatedAt    time.Time
-	AuthorizedAt time.Time
+	Id        uint
+	FirstName string
+	LastName  string
+	Email     string
+	Username  string
+	Password  string
+	CreatedAt time.Time
+	UpdatedAt time.Time
 }
 
 type UserSignUp struct {

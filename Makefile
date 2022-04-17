@@ -12,3 +12,9 @@ create:
 
 drop:
 	dropdb todo
+
+up:
+	migrate -path ./schema -database "postgresql://USERNAME:PASSWORD@localhost:5432/todo?sslmode=disable" -verbose up
+
+down:
+	migrate -path ./schema -database "postgresql://USERNAME:PASSWORD@localhost:5432/todo?sslmode=disable" -verbose down
