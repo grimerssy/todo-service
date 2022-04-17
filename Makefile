@@ -1,7 +1,6 @@
 run:
 	go run ./cmd/main.go
 
-
 start:
 	brew services start postgresql
 
