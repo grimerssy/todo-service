@@ -25,8 +25,8 @@ CREATE TABLE users_todos (
     user_id INTEGER NOT NULL,
     todo_id INTEGER NOT NULL,
     CONSTRAINT pk_users_todos PRIMARY KEY (user_id, todo_id),
-    CONSTRAINT fk_user_id FOREIGN KEY (user_id) REFERENCES users(id),
-    CONSTRAINT fk_todo_id FOREIGN KEY (todo_id) REFERENCES todos(id)
+    CONSTRAINT fk_user_id FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    CONSTRAINT fk_todo_id FOREIGN KEY (todo_id) REFERENCES todos(id) ON DELETE CASCADE
 );
 
 CREATE FUNCTION set_updated_at()

@@ -21,6 +21,7 @@ type TodoCreate struct {
 type TodoUpdate struct {
 	Title       string `json:"title"`
 	Description string `json:"description"`
+	Completed   bool   `json:"completed" binding:"required"`
 }
 
 type TodoResponse struct {

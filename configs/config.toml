@@ -1,0 +1,6 @@
+[postgres]
+username = "todo_service"
+host = "127.0.0.1"
+port = "8080"
+dbname = "todo"
+sslmode = "disable"
