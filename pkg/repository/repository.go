@@ -17,8 +17,8 @@ type Todo interface {
 	GetById(ctx context.Context, userId uint, todoId uint) (core.Todo, error)
 	GetByCompletion(ctx context.Context, userId uint, completed bool) ([]core.Todo, error)
 	GetAll(ctx context.Context, userId uint) ([]core.Todo, error)
-	Update(ctx context.Context, userId uint, todo core.Todo) error
-	Patch(ctx context.Context, userId uint, todo core.Todo) error
+	Update(ctx context.Context, userId uint, todoId uint, todo core.Todo) error
+	Patch(ctx context.Context, userId uint, todoId uint, todo core.Todo) error
 	DeleteById(ctx context.Context, userId uint, todoId uint) error
 	DeleteByCompletion(ctx context.Context, userId uint, completed bool) error
 }
