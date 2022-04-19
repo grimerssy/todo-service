@@ -52,8 +52,8 @@ func (r *TodoPostgres) GetById(ctx context.Context, userId uint, todoId uint) (c
 	query := fmt.Sprintf(`
 SELECT td.id, td.title, td.description, td.completed, td.created_at, td.updated_at
 FROM %s td
-INNER JOIN (SELECT todo_id FROM %s WHERE user_id = $1) AS usr_td
-ON usr_td.todo_id = td.id
+INNER JOIN (SELECT todo_id FROM %s WHERE user_id = $1) AS ut
+ON ut.todo_id = td.id
 WHERE td.id = $2
 LIMIT 1;
 `, todosTable, usersTodosTable)
@@ -70,8 +70,8 @@ func (r *TodoPostgres) GetByCompletion(ctx context.Context, userId uint, complet
 	query := fmt.Sprintf(`
 SELECT td.id, td.title, td.description, td.completed, td.created_at, td.updated_at
 FROM %s td
-INNER JOIN (SELECT todo_id FROM %s WHERE user_id = $1) AS usr_td
-ON usr_td.todo_id = td.id
+INNER JOIN (SELECT todo_id FROM %s WHERE user_id = $1) AS ut
+ON ut.todo_id = td.id
 WHERE td.completed = $2
 `, todosTable, usersTodosTable)
 
@@ -98,8 +98,8 @@ func (r *TodoPostgres) GetAll(ctx context.Context, userId uint) ([]core.Todo, er
 	query := fmt.Sprintf(`
 SELECT td.id, td.title, td.description, td.completed, td.created_at, td.updated_at
 FROM %s td
-INNER JOIN (SELECT todo_id FROM %s WHERE user_id = $1) AS usr_td
-ON usr_td.todo_id = td.id;
+INNER JOIN (SELECT todo_id FROM %s WHERE user_id = $1) AS ut
+ON ut.todo_id = td.id;
 `, todosTable, usersTodosTable)
 
 	var todos []core.Todo
@@ -127,9 +127,9 @@ UPDATE %s td
 SET title = $1,
     description = $2,
     completed = $3
-FROM %s usr_td
-WHERE usr_td.user_id = $4
-    AND usr_td.todo_id = td.id
+FROM %s ut
+WHERE ut.user_id = $4
+    AND ut.todo_id = td.id
     AND td.id = $5
 `, todosTable, usersTodosTable)
 
@@ -161,9 +161,9 @@ func (r *TodoPostgres) Patch(ctx context.Context, userId uint, todo core.Todo) e
 	query := fmt.Sprintf(`
 UPDATE %s td
 %s
-FROM %s usr_td
-WHERE usr_td.user_id = $%d
-    AND usr_td.todo_id = td.id
+FROM %s ut
+WHERE ut.user_id = $%d
+    AND ut.todo_id = td.id
     AND td.id = $%d
 `, todosTable, setQuery, usersTodosTable, argId, argId+1)
 
@@ -176,9 +176,9 @@ WHERE usr_td.user_id = $%d
 func (r *TodoPostgres) DeleteById(ctx context.Context, userId uint, todoId uint) error {
 	query := fmt.Sprintf(`
 DELETE FROM %s td
-USING %s usr_td
-WHERE usr_td.user_id = $1
-    AND usr_td.todo_id = td.id
+USING %s ut
+WHERE ut.user_id = $1
+    AND ut.todo_id = td.id
     AND td.id = $2;
 `, todosTable, usersTodosTable)
 
@@ -189,9 +189,9 @@ WHERE usr_td.user_id = $1
 func (r *TodoPostgres) DeleteByCompletion(ctx context.Context, userId uint, completed bool) error {
 	query := fmt.Sprintf(`
 DELETE FROM %s td
-USING %s usr_td
-WHERE usr_td.user_id = $1
-    AND usr_td.todo_id = td.id
+USING %s ut
+WHERE ut.user_id = $1
+    AND ut.todo_id = td.id
     AND td.completed = $2;
 `, todosTable, usersTodosTable)
 
