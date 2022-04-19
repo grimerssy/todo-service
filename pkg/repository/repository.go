@@ -2,12 +2,11 @@ package repository
 
 import (
 	"context"
-	"database/sql"
 
 	"github.com/grimerssy/todo-service/internal/core"
 )
 
-type Authorization interface {
+type Authentication interface {
 	CreateUser(ctx context.Context, user core.User) (uint, error)
 	GetUserId(ctx context.Context, username string, password string) (uint, error)
 }
@@ -24,13 +23,13 @@ type Todo interface {
 }
 
 type Repository struct {
-	Authorization
+	Authentication
 	Todo
 }
 
-func NewRepository(db *sql.DB) *Repository {
+func NewRepository(auth Authentication, todo Todo) *Repository {
 	return &Repository{
-		Authorization: NewAuthPostgres(db),
-		Todo:          NewTodoPostgres(db),
+		Authentication: auth,
+		Todo:           todo,
 	}
 }

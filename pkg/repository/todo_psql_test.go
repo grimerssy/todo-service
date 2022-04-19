@@ -11,7 +11,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestTodoPostgres_Create(t *testing.T) {
+func TestTodoPsql_Create(t *testing.T) {
 	const (
 		id          = 1
 		title       = "t"
@@ -23,7 +23,7 @@ func TestTodoPostgres_Create(t *testing.T) {
 	require.NoError(t, err)
 	defer db.Close()
 
-	r := NewTodoPostgres(db)
+	r := NewTodoPsql(db)
 
 	tests := []struct {
 		name      string
@@ -87,7 +87,7 @@ func TestTodoPostgres_Create(t *testing.T) {
 	}
 }
 
-func TestTodoPostgres_GetById(t *testing.T) {
+func TestTodoPsql_GetById(t *testing.T) {
 	const (
 		id          = 1
 		title       = "t"
@@ -100,7 +100,7 @@ func TestTodoPostgres_GetById(t *testing.T) {
 	require.NoError(t, err)
 	defer db.Close()
 
-	r := NewTodoPostgres(db)
+	r := NewTodoPsql(db)
 
 	tests := []struct {
 		name      string
@@ -170,7 +170,7 @@ func TestTodoPostgres_GetById(t *testing.T) {
 	}
 }
 
-func TestTodoPostgres_GetByCompletion(t *testing.T) {
+func TestTodoPsql_GetByCompletion(t *testing.T) {
 	const (
 		id          = 1
 		title       = "t"
@@ -183,7 +183,7 @@ func TestTodoPostgres_GetByCompletion(t *testing.T) {
 	require.NoError(t, err)
 	defer db.Close()
 
-	r := NewTodoPostgres(db)
+	r := NewTodoPsql(db)
 
 	tests := []struct {
 		name      string
@@ -255,7 +255,7 @@ func TestTodoPostgres_GetByCompletion(t *testing.T) {
 	}
 }
 
-func TestTodoPostgres_GetAll(t *testing.T) {
+func TestTodoPsql_GetAll(t *testing.T) {
 	const (
 		id          = 1
 		title       = "t"
@@ -268,7 +268,7 @@ func TestTodoPostgres_GetAll(t *testing.T) {
 	require.NoError(t, err)
 	defer db.Close()
 
-	r := NewTodoPostgres(db)
+	r := NewTodoPsql(db)
 
 	tests := []struct {
 		name      string
@@ -336,7 +336,7 @@ func TestTodoPostgres_GetAll(t *testing.T) {
 	}
 }
 
-func TestTodoPostgres_Update(t *testing.T) {
+func TestTodoPsql_Update(t *testing.T) {
 	const (
 		id          = 1
 		title       = "t"
@@ -348,7 +348,7 @@ func TestTodoPostgres_Update(t *testing.T) {
 	require.NoError(t, err)
 	defer db.Close()
 
-	r := NewTodoPostgres(db)
+	r := NewTodoPsql(db)
 
 	tests := []struct {
 		name      string
@@ -415,7 +415,7 @@ func TestTodoPostgres_Update(t *testing.T) {
 	}
 }
 
-func TestTodoPostgres_Patch(t *testing.T) {
+func TestTodoPsql_Patch(t *testing.T) {
 	const (
 		id          = 1
 		title       = "t"
@@ -427,7 +427,7 @@ func TestTodoPostgres_Patch(t *testing.T) {
 	require.NoError(t, err)
 	defer db.Close()
 
-	r := NewTodoPostgres(db)
+	r := NewTodoPsql(db)
 
 	tests := []struct {
 		name      string
@@ -593,14 +593,14 @@ func TestTodoPostgres_Patch(t *testing.T) {
 	}
 }
 
-func TestTodoPostgres_DeleteById(t *testing.T) {
+func TestTodoPsql_DeleteById(t *testing.T) {
 	const id = 1
 
 	db, mock, err := sqlmock.New()
 	require.NoError(t, err)
 	defer db.Close()
 
-	r := NewTodoPostgres(db)
+	r := NewTodoPsql(db)
 
 	tests := []struct {
 		name      string
@@ -651,7 +651,7 @@ func TestTodoPostgres_DeleteById(t *testing.T) {
 	}
 }
 
-func TestTodoPostgres_DeleteByCompletion(t *testing.T) {
+func TestTodoPsql_DeleteByCompletion(t *testing.T) {
 	const (
 		id        = 1
 		completed = true
@@ -661,7 +661,7 @@ func TestTodoPostgres_DeleteByCompletion(t *testing.T) {
 	require.NoError(t, err)
 	defer db.Close()
 
-	r := NewTodoPostgres(db)
+	r := NewTodoPsql(db)
 
 	tests := []struct {
 		name      string

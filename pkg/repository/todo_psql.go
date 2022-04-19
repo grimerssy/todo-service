@@ -9,15 +9,15 @@ import (
 	"github.com/grimerssy/todo-service/internal/core"
 )
 
-type TodoPostgres struct {
+type TodoPsql struct {
 	db *sql.DB
 }
 
-func NewTodoPostgres(db *sql.DB) *TodoPostgres {
-	return &TodoPostgres{db: db}
+func NewTodoPsql(db *sql.DB) *TodoPsql {
+	return &TodoPsql{db: db}
 }
 
-func (r *TodoPostgres) Create(ctx context.Context, userId uint, todo core.Todo) (uint, error) {
+func (r *TodoPsql) Create(ctx context.Context, userId uint, todo core.Todo) (uint, error) {
 	tx, err := r.db.BeginTx(ctx, nil)
 	if err != nil {
 		return 0, err
@@ -48,7 +48,7 @@ VALUES ($1, $2);
 	return todoId, tx.Commit()
 }
 
-func (r *TodoPostgres) GetById(ctx context.Context, userId uint, todoId uint) (core.Todo, error) {
+func (r *TodoPsql) GetById(ctx context.Context, userId uint, todoId uint) (core.Todo, error) {
 	query := fmt.Sprintf(`
 SELECT td.id, td.title, td.description, td.completed, td.created_at, td.updated_at
 FROM %s td
@@ -66,7 +66,7 @@ LIMIT 1;
 	return todo, err
 }
 
-func (r *TodoPostgres) GetByCompletion(ctx context.Context, userId uint, completed bool) ([]core.Todo, error) {
+func (r *TodoPsql) GetByCompletion(ctx context.Context, userId uint, completed bool) ([]core.Todo, error) {
 	query := fmt.Sprintf(`
 SELECT td.id, td.title, td.description, td.completed, td.created_at, td.updated_at
 FROM %s td
@@ -94,7 +94,7 @@ WHERE td.completed = $2
 	return todos, rows.Err()
 }
 
-func (r *TodoPostgres) GetAll(ctx context.Context, userId uint) ([]core.Todo, error) {
+func (r *TodoPsql) GetAll(ctx context.Context, userId uint) ([]core.Todo, error) {
 	query := fmt.Sprintf(`
 SELECT td.id, td.title, td.description, td.completed, td.created_at, td.updated_at
 FROM %s td
@@ -121,7 +121,7 @@ ON ut.todo_id = td.id;
 	return todos, rows.Err()
 }
 
-func (r *TodoPostgres) Update(ctx context.Context, userId uint, todoId uint, todo core.Todo) error {
+func (r *TodoPsql) Update(ctx context.Context, userId uint, todoId uint, todo core.Todo) error {
 	query := fmt.Sprintf(`
 UPDATE %s td
 SET title = $1,
@@ -137,7 +137,7 @@ WHERE ut.user_id = $4
 	return err
 }
 
-func (r *TodoPostgres) Patch(ctx context.Context, userId uint, todoId uint, todo core.Todo) error {
+func (r *TodoPsql) Patch(ctx context.Context, userId uint, todoId uint, todo core.Todo) error {
 	setStatements := make([]string, 0)
 	args := make([]interface{}, 0)
 	argId := 1
@@ -173,7 +173,7 @@ WHERE ut.user_id = $%d
 	return err
 }
 
-func (r *TodoPostgres) DeleteById(ctx context.Context, userId uint, todoId uint) error {
+func (r *TodoPsql) DeleteById(ctx context.Context, userId uint, todoId uint) error {
 	query := fmt.Sprintf(`
 DELETE FROM %s td
 USING %s ut
@@ -186,7 +186,7 @@ WHERE ut.user_id = $1
 	return err
 }
 
-func (r *TodoPostgres) DeleteByCompletion(ctx context.Context, userId uint, completed bool) error {
+func (r *TodoPsql) DeleteByCompletion(ctx context.Context, userId uint, completed bool) error {
 	query := fmt.Sprintf(`
 DELETE FROM %s td
 USING %s ut
