@@ -10,7 +10,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestAuthPostgres_CreateUser(t *testing.T) {
+func TestAuthPsql_CreateUser(t *testing.T) {
 	const (
 		id        = 1
 		firstName = "fn"
@@ -24,7 +24,7 @@ func TestAuthPostgres_CreateUser(t *testing.T) {
 	require.NoError(t, err)
 	defer db.Close()
 
-	r := NewAuthPostgres(db)
+	r := NewAuthPsql(db)
 
 	tests := []struct {
 		name      string
@@ -80,7 +80,7 @@ func TestAuthPostgres_CreateUser(t *testing.T) {
 	}
 }
 
-func TestAuthPostgres_GetUserId(t *testing.T) {
+func TestAuthPsql_GetUserId(t *testing.T) {
 	type input struct {
 		username string
 		password string
@@ -97,7 +97,7 @@ func TestAuthPostgres_GetUserId(t *testing.T) {
 	require.NoError(t, err)
 	defer db.Close()
 
-	r := NewAuthPostgres(db)
+	r := NewAuthPsql(db)
 
 	tests := []struct {
 		name      string
