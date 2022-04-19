@@ -75,7 +75,7 @@ ON ut.todo_id = td.id
 WHERE td.completed = $2
 `, todosTable, usersTodosTable)
 
-	var todos []core.Todo
+	todos := []core.Todo{}
 	rows, err := r.db.QueryContext(ctx, query, userId, completed)
 	if err != nil {
 		return todos, err
@@ -102,7 +102,7 @@ INNER JOIN (SELECT todo_id FROM %s WHERE user_id = $1) AS ut
 ON ut.todo_id = td.id;
 `, todosTable, usersTodosTable)
 
-	var todos []core.Todo
+	todos := []core.Todo{}
 	rows, err := r.db.QueryContext(ctx, query, userId)
 	if err != nil {
 		return todos, err
