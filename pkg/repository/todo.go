@@ -121,7 +121,7 @@ ON ut.todo_id = td.id;
 	return todos, rows.Err()
 }
 
-func (r *TodoPostgres) Update(ctx context.Context, userId uint, todo core.Todo) error {
+func (r *TodoPostgres) Update(ctx context.Context, userId uint, todoId uint, todo core.Todo) error {
 	query := fmt.Sprintf(`
 UPDATE %s td
 SET title = $1,
@@ -133,11 +133,11 @@ WHERE ut.user_id = $4
     AND td.id = $5
 `, todosTable, usersTodosTable)
 
-	_, err := r.db.ExecContext(ctx, query, todo.Title, todo.Description, todo.Completed, userId, todo.Id)
+	_, err := r.db.ExecContext(ctx, query, todo.Title, todo.Description, todo.Completed, userId, todoId)
 	return err
 }
 
-func (r *TodoPostgres) Patch(ctx context.Context, userId uint, todo core.Todo) error {
+func (r *TodoPostgres) Patch(ctx context.Context, userId uint, todoId uint, todo core.Todo) error {
 	setStatements := make([]string, 0)
 	args := make([]interface{}, 0)
 	argId := 1
@@ -167,7 +167,7 @@ WHERE ut.user_id = $%d
     AND td.id = $%d
 `, todosTable, setQuery, usersTodosTable, argId, argId+1)
 
-	args = append(args, userId, todo.Id)
+	args = append(args, userId, todoId)
 
 	_, err := r.db.ExecContext(ctx, query, args...)
 	return err
