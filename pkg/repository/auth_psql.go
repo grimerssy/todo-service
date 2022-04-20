@@ -33,7 +33,7 @@ RETURNING id;
 	return id, nil
 }
 
-func (r *AuthPsql) GetUserId(ctx context.Context, username string, password string) (uint, error) {
+func (r *AuthPsql) GetUserID(ctx context.Context, username string, password string) (uint, error) {
 	query := fmt.Sprintf(`
 SELECT id FROM %s 
 WHERE username = $1 

@@ -80,7 +80,7 @@ func TestAuthPsql_CreateUser(t *testing.T) {
 	}
 }
 
-func TestAuthPsql_GetUserId(t *testing.T) {
+func TestAuthPsql_GetUserID(t *testing.T) {
 	type input struct {
 		username string
 		password string
@@ -140,7 +140,7 @@ func TestAuthPsql_GetUserId(t *testing.T) {
 	}
 	for _, tt := range tests {
 		tt.mock(mock)
-		got, err := r.GetUserId(context.Background(), tt.input.username, tt.input.password)
+		got, err := r.GetUserID(context.Background(), tt.input.username, tt.input.password)
 		tt.errAssert(t, err)
 		assert.Equal(t, tt.want, got)
 		assert.NoError(t, mock.ExpectationsWereMet())

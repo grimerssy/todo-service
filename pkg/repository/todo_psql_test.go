@@ -87,7 +87,7 @@ func TestTodoPsql_Create(t *testing.T) {
 	}
 }
 
-func TestTodoPsql_GetById(t *testing.T) {
+func TestTodoPsql_GetByID(t *testing.T) {
 	const (
 		id          = 1
 		title       = "t"
@@ -105,8 +105,8 @@ func TestTodoPsql_GetById(t *testing.T) {
 	tests := []struct {
 		name      string
 		mock      func(m sqlmock.Sqlmock)
-		userId    uint
-		todoId    uint
+		userID    uint
+		todoID    uint
 		want      core.Todo
 		errAssert assert.ErrorAssertionFunc
 	}{
@@ -120,10 +120,10 @@ func TestTodoPsql_GetById(t *testing.T) {
 					WithArgs(id, id).
 					WillReturnRows(rows)
 			},
-			userId: id,
-			todoId: id,
+			userID: id,
+			todoID: id,
 			want: core.Todo{
-				Id:          id,
+				ID:          id,
 				Title:       title,
 				Description: description,
 				Completed:   completed,
@@ -141,8 +141,8 @@ func TestTodoPsql_GetById(t *testing.T) {
 					WithArgs(0, id).
 					WillReturnRows(rows)
 			},
-			userId:    0,
-			todoId:    id,
+			userID:    0,
+			todoID:    id,
 			want:      core.Todo{},
 			errAssert: assert.Error,
 		},
@@ -155,15 +155,15 @@ func TestTodoPsql_GetById(t *testing.T) {
 					WithArgs(id, 0).
 					WillReturnRows(rows)
 			},
-			userId:    id,
-			todoId:    0,
+			userID:    id,
+			todoID:    0,
 			want:      core.Todo{},
 			errAssert: assert.Error,
 		},
 	}
 	for _, tt := range tests {
 		tt.mock(mock)
-		got, err := r.GetById(context.Background(), tt.userId, tt.todoId)
+		got, err := r.GetByID(context.Background(), tt.userID, tt.todoID)
 		tt.errAssert(t, err)
 		assert.Equal(t, tt.want, got)
 		assert.NoError(t, mock.ExpectationsWereMet())
@@ -188,7 +188,7 @@ func TestTodoPsql_GetByCompletion(t *testing.T) {
 	tests := []struct {
 		name      string
 		mock      func(m sqlmock.Sqlmock)
-		userId    uint
+		userID    uint
 		input     bool
 		want      []core.Todo
 		errAssert assert.ErrorAssertionFunc
@@ -203,11 +203,11 @@ func TestTodoPsql_GetByCompletion(t *testing.T) {
 					WithArgs(id, completed).
 					WillReturnRows(rows)
 			},
-			userId: id,
+			userID: id,
 			input:  completed,
 			want: []core.Todo{
 				{
-					Id:          id,
+					ID:          id,
 					Title:       title,
 					Description: description,
 					Completed:   completed,
@@ -226,7 +226,7 @@ func TestTodoPsql_GetByCompletion(t *testing.T) {
 					WithArgs(0, completed).
 					WillReturnRows(rows)
 			},
-			userId:    0,
+			userID:    0,
 			input:     completed,
 			want:      []core.Todo{},
 			errAssert: assert.NoError,
@@ -240,7 +240,7 @@ func TestTodoPsql_GetByCompletion(t *testing.T) {
 					WithArgs(id, completed).
 					WillReturnRows(rows)
 			},
-			userId:    id,
+			userID:    id,
 			input:     completed,
 			want:      []core.Todo{},
 			errAssert: assert.NoError,
@@ -248,7 +248,7 @@ func TestTodoPsql_GetByCompletion(t *testing.T) {
 	}
 	for _, tt := range tests {
 		tt.mock(mock)
-		got, err := r.GetByCompletion(context.Background(), tt.userId, tt.input)
+		got, err := r.GetByCompletion(context.Background(), tt.userID, tt.input)
 		tt.errAssert(t, err)
 		assert.Equal(t, tt.want, got)
 		assert.NoError(t, mock.ExpectationsWereMet())
@@ -273,7 +273,7 @@ func TestTodoPsql_GetAll(t *testing.T) {
 	tests := []struct {
 		name      string
 		mock      func(m sqlmock.Sqlmock)
-		userId    uint
+		userID    uint
 		want      []core.Todo
 		errAssert assert.ErrorAssertionFunc
 	}{
@@ -287,10 +287,10 @@ func TestTodoPsql_GetAll(t *testing.T) {
 					WithArgs(id).
 					WillReturnRows(rows)
 			},
-			userId: id,
+			userID: id,
 			want: []core.Todo{
 				{
-					Id:          id,
+					ID:          id,
 					Title:       title,
 					Description: description,
 					Completed:   completed,
@@ -309,7 +309,7 @@ func TestTodoPsql_GetAll(t *testing.T) {
 					WithArgs(0).
 					WillReturnRows(rows)
 			},
-			userId:    0,
+			userID:    0,
 			want:      []core.Todo{},
 			errAssert: assert.NoError,
 		},
@@ -322,14 +322,14 @@ func TestTodoPsql_GetAll(t *testing.T) {
 					WithArgs(id).
 					WillReturnRows(rows)
 			},
-			userId:    id,
+			userID:    id,
 			want:      []core.Todo{},
 			errAssert: assert.NoError,
 		},
 	}
 	for _, tt := range tests {
 		tt.mock(mock)
-		got, err := r.GetAll(context.Background(), tt.userId)
+		got, err := r.GetAll(context.Background(), tt.userID)
 		tt.errAssert(t, err)
 		assert.Equal(t, tt.want, got)
 		assert.NoError(t, mock.ExpectationsWereMet())
@@ -353,8 +353,8 @@ func TestTodoPsql_Update(t *testing.T) {
 	tests := []struct {
 		name      string
 		mock      func(m sqlmock.Sqlmock)
-		userId    uint
-		todoId    uint
+		userID    uint
+		todoID    uint
 		input     core.Todo
 		errAssert assert.ErrorAssertionFunc
 	}{
@@ -365,8 +365,8 @@ func TestTodoPsql_Update(t *testing.T) {
 					WithArgs(title, description, completed, id, id).
 					WillReturnResult(sqlmock.NewResult(id, 1))
 			},
-			userId: id,
-			todoId: id,
+			userID: id,
+			todoID: id,
 			input: core.Todo{
 				Title:       title,
 				Description: description,
@@ -381,8 +381,8 @@ func TestTodoPsql_Update(t *testing.T) {
 					WithArgs(title, description, completed, 0, id).
 					WillReturnResult(sqlmock.NewResult(0, 0))
 			},
-			userId: 0,
-			todoId: id,
+			userID: 0,
+			todoID: id,
 			input: core.Todo{
 				Title:       title,
 				Description: description,
@@ -397,8 +397,8 @@ func TestTodoPsql_Update(t *testing.T) {
 					WithArgs(title, description, completed, id, 0).
 					WillReturnResult(sqlmock.NewResult(0, 0))
 			},
-			userId: id,
-			todoId: 0,
+			userID: id,
+			todoID: 0,
 			input: core.Todo{
 				Title:       title,
 				Description: description,
@@ -409,7 +409,7 @@ func TestTodoPsql_Update(t *testing.T) {
 	}
 	for _, tt := range tests {
 		tt.mock(mock)
-		err := r.Update(context.Background(), tt.userId, tt.todoId, tt.input)
+		err := r.Update(context.Background(), tt.userID, tt.todoID, tt.input)
 		tt.errAssert(t, err)
 		assert.NoError(t, mock.ExpectationsWereMet())
 	}
@@ -432,8 +432,8 @@ func TestTodoPsql_Patch(t *testing.T) {
 	tests := []struct {
 		name      string
 		mock      func(m sqlmock.Sqlmock)
-		userId    uint
-		todoId    uint
+		userID    uint
+		todoID    uint
 		input     core.Todo
 		errAssert assert.ErrorAssertionFunc
 	}{
@@ -444,8 +444,8 @@ func TestTodoPsql_Patch(t *testing.T) {
 					WithArgs(title, description, completed, id, id).
 					WillReturnResult(sqlmock.NewResult(id, 1))
 			},
-			userId: id,
-			todoId: id,
+			userID: id,
+			todoID: id,
 			input: core.Todo{
 				Title:       title,
 				Description: description,
@@ -460,8 +460,8 @@ func TestTodoPsql_Patch(t *testing.T) {
 					WithArgs(description, completed, id, id).
 					WillReturnResult(sqlmock.NewResult(id, 1))
 			},
-			userId: id,
-			todoId: id,
+			userID: id,
+			todoID: id,
 			input: core.Todo{
 				Description: description,
 				Completed:   completed,
@@ -475,8 +475,8 @@ func TestTodoPsql_Patch(t *testing.T) {
 					WithArgs(title, completed, id, id).
 					WillReturnResult(sqlmock.NewResult(id, 1))
 			},
-			userId: id,
-			todoId: id,
+			userID: id,
+			todoID: id,
 			input: core.Todo{
 				Title:     title,
 				Completed: completed,
@@ -490,8 +490,8 @@ func TestTodoPsql_Patch(t *testing.T) {
 					WithArgs(title, description, false, id, id).
 					WillReturnResult(sqlmock.NewResult(id, 1))
 			},
-			userId: id,
-			todoId: id,
+			userID: id,
+			todoID: id,
 			input: core.Todo{
 				Title:       title,
 				Description: description,
@@ -505,8 +505,8 @@ func TestTodoPsql_Patch(t *testing.T) {
 					WithArgs(title, false, id, id).
 					WillReturnResult(sqlmock.NewResult(id, 1))
 			},
-			userId: id,
-			todoId: id,
+			userID: id,
+			todoID: id,
 			input: core.Todo{
 				Title: title,
 			},
@@ -519,8 +519,8 @@ func TestTodoPsql_Patch(t *testing.T) {
 					WithArgs(description, false, id, id).
 					WillReturnResult(sqlmock.NewResult(id, 1))
 			},
-			userId: id,
-			todoId: id,
+			userID: id,
+			todoID: id,
 			input: core.Todo{
 				Description: description,
 			},
@@ -533,8 +533,8 @@ func TestTodoPsql_Patch(t *testing.T) {
 					WithArgs(completed, id, id).
 					WillReturnResult(sqlmock.NewResult(id, 1))
 			},
-			userId: id,
-			todoId: id,
+			userID: id,
+			todoID: id,
 			input: core.Todo{
 				Completed: completed,
 			},
@@ -547,8 +547,8 @@ func TestTodoPsql_Patch(t *testing.T) {
 					WithArgs(false, id, id).
 					WillReturnResult(sqlmock.NewResult(id, 1))
 			},
-			userId:    id,
-			todoId:    id,
+			userID:    id,
+			todoID:    id,
 			input:     core.Todo{},
 			errAssert: assert.NoError,
 		},
@@ -559,8 +559,8 @@ func TestTodoPsql_Patch(t *testing.T) {
 					WithArgs(title, description, completed, 0, id).
 					WillReturnResult(sqlmock.NewResult(0, 0))
 			},
-			userId: 0,
-			todoId: id,
+			userID: 0,
+			todoID: id,
 			input: core.Todo{
 				Title:       title,
 				Description: description,
@@ -575,8 +575,8 @@ func TestTodoPsql_Patch(t *testing.T) {
 					WithArgs(title, description, completed, id, 0).
 					WillReturnResult(sqlmock.NewResult(0, 0))
 			},
-			userId: id,
-			todoId: 0,
+			userID: id,
+			todoID: 0,
 			input: core.Todo{
 				Title:       title,
 				Description: description,
@@ -587,13 +587,13 @@ func TestTodoPsql_Patch(t *testing.T) {
 	}
 	for _, tt := range tests {
 		tt.mock(mock)
-		err := r.Patch(context.Background(), tt.userId, tt.todoId, tt.input)
+		err := r.Patch(context.Background(), tt.userID, tt.todoID, tt.input)
 		tt.errAssert(t, err)
 		assert.NoError(t, mock.ExpectationsWereMet())
 	}
 }
 
-func TestTodoPsql_DeleteById(t *testing.T) {
+func TestTodoPsql_DeleteByID(t *testing.T) {
 	const id = 1
 
 	db, mock, err := sqlmock.New()
@@ -605,8 +605,8 @@ func TestTodoPsql_DeleteById(t *testing.T) {
 	tests := []struct {
 		name      string
 		mock      func(m sqlmock.Sqlmock)
-		userId    uint
-		todoId    uint
+		userID    uint
+		todoID    uint
 		errAssert assert.ErrorAssertionFunc
 	}{
 		{
@@ -616,8 +616,8 @@ func TestTodoPsql_DeleteById(t *testing.T) {
 					WithArgs(id, id).
 					WillReturnResult(sqlmock.NewResult(id, 1))
 			},
-			userId:    id,
-			todoId:    id,
+			userID:    id,
+			todoID:    id,
 			errAssert: assert.NoError,
 		},
 		{
@@ -627,8 +627,8 @@ func TestTodoPsql_DeleteById(t *testing.T) {
 					WithArgs(0, id).
 					WillReturnResult(sqlmock.NewResult(0, 0))
 			},
-			userId:    0,
-			todoId:    id,
+			userID:    0,
+			todoID:    id,
 			errAssert: assert.NoError,
 		},
 		{
@@ -638,14 +638,14 @@ func TestTodoPsql_DeleteById(t *testing.T) {
 					WithArgs(id, 0).
 					WillReturnResult(sqlmock.NewResult(0, 0))
 			},
-			userId:    id,
-			todoId:    0,
+			userID:    id,
+			todoID:    0,
 			errAssert: assert.NoError,
 		},
 	}
 	for _, tt := range tests {
 		tt.mock(mock)
-		err := r.DeleteById(context.Background(), tt.userId, tt.todoId)
+		err := r.DeleteByID(context.Background(), tt.userID, tt.todoID)
 		tt.errAssert(t, err)
 		assert.NoError(t, mock.ExpectationsWereMet())
 	}
@@ -666,7 +666,7 @@ func TestTodoPsql_DeleteByCompletion(t *testing.T) {
 	tests := []struct {
 		name      string
 		mock      func(m sqlmock.Sqlmock)
-		userId    uint
+		userID    uint
 		input     bool
 		errAssert assert.ErrorAssertionFunc
 	}{
@@ -677,7 +677,7 @@ func TestTodoPsql_DeleteByCompletion(t *testing.T) {
 					WithArgs(id, completed).
 					WillReturnResult(sqlmock.NewResult(id, 1))
 			},
-			userId:    id,
+			userID:    id,
 			input:     completed,
 			errAssert: assert.NoError,
 		},
@@ -688,7 +688,7 @@ func TestTodoPsql_DeleteByCompletion(t *testing.T) {
 					WithArgs(0, completed).
 					WillReturnResult(sqlmock.NewResult(0, 0))
 			},
-			userId:    0,
+			userID:    0,
 			input:     completed,
 			errAssert: assert.NoError,
 		},
@@ -699,14 +699,14 @@ func TestTodoPsql_DeleteByCompletion(t *testing.T) {
 					WithArgs(id, completed).
 					WillReturnResult(sqlmock.NewResult(0, 0))
 			},
-			userId:    id,
+			userID:    id,
 			input:     completed,
 			errAssert: assert.NoError,
 		},
 	}
 	for _, tt := range tests {
 		tt.mock(mock)
-		err := r.DeleteByCompletion(context.Background(), tt.userId, tt.input)
+		err := r.DeleteByCompletion(context.Background(), tt.userID, tt.input)
 		tt.errAssert(t, err)
 		assert.NoError(t, mock.ExpectationsWereMet())
 	}

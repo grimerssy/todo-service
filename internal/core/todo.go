@@ -5,7 +5,7 @@ import (
 )
 
 type Todo struct {
-	Id          uint
+	ID          uint
 	Title       string
 	Description string
 	Completed   bool

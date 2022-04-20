@@ -48,7 +48,7 @@ VALUES ($1, $2);
 	return todoId, tx.Commit()
 }
 
-func (r *TodoPsql) GetById(ctx context.Context, userId uint, todoId uint) (core.Todo, error) {
+func (r *TodoPsql) GetByID(ctx context.Context, userId uint, todoId uint) (core.Todo, error) {
 	query := fmt.Sprintf(`
 SELECT td.id, td.title, td.description, td.completed, td.created_at, td.updated_at
 FROM %s td
@@ -61,7 +61,7 @@ LIMIT 1;
 	var todo core.Todo
 	row := r.db.QueryRowContext(ctx, query, userId, todoId)
 	err := row.Scan(
-		&todo.Id, &todo.Title, &todo.Description, &todo.Completed, &todo.CreatedAt, &todo.UpdatedAt)
+		&todo.ID, &todo.Title, &todo.Description, &todo.Completed, &todo.CreatedAt, &todo.UpdatedAt)
 
 	return todo, err
 }
@@ -84,7 +84,7 @@ WHERE td.completed = $2
 	for rows.Next() {
 		var todo core.Todo
 		err := rows.Scan(
-			&todo.Id, &todo.Title, &todo.Description, &todo.Completed, &todo.CreatedAt, &todo.UpdatedAt)
+			&todo.ID, &todo.Title, &todo.Description, &todo.Completed, &todo.CreatedAt, &todo.UpdatedAt)
 		if err != nil {
 			return todos, err
 		}
@@ -111,7 +111,7 @@ ON ut.todo_id = td.id;
 	for rows.Next() {
 		var todo core.Todo
 		err := rows.Scan(
-			&todo.Id, &todo.Title, &todo.Description, &todo.Completed, &todo.CreatedAt, &todo.UpdatedAt)
+			&todo.ID, &todo.Title, &todo.Description, &todo.Completed, &todo.CreatedAt, &todo.UpdatedAt)
 		if err != nil {
 			return todos, err
 		}
@@ -173,7 +173,7 @@ WHERE ut.user_id = $%d
 	return err
 }
 
-func (r *TodoPsql) DeleteById(ctx context.Context, userId uint, todoId uint) error {
+func (r *TodoPsql) DeleteByID(ctx context.Context, userId uint, todoId uint) error {
 	query := fmt.Sprintf(`
 DELETE FROM %s td
 USING %s ut
