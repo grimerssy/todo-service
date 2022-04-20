@@ -1,6 +1,13 @@
-[database]
+[postgres]
 username = "todo_service"
 host = "127.0.0.1"
 port = "8080"
 dbname = "todo"
 sslmode = "disable"
+
+[hashids]
+hashlength = 6
+salts = { "todo" = "stWLM0rFHEbpINHg" }
+
+[bcrypt]
+cost = 12
