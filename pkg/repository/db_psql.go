@@ -28,10 +28,5 @@ func NewDbPsql(cfg ConfigPsql) (*sql.DB, error) {
 		return nil, err
 	}
 
-	err = db.Ping()
-	if err != nil {
-		return nil, err
-	}
-
-	return db, nil
+	return db, db.Ping()
 }
