@@ -16,19 +16,16 @@ func NewAuthPsql(db *sql.DB) *AuthPsql {
 	return &AuthPsql{db: db}
 }
 
-func (r *AuthPsql) CreateUser(ctx context.Context, user core.User) (uint, error) {
+func (r *AuthPsql) CreateUser(ctx context.Context, user core.User) error {
 	query := fmt.Sprintf(`
 INSERT INTO %s (first_name, last_name, email, username, password) 
-VALUES ($1, $2, $3, $4, $5) 
-RETURNING id;
+VALUES ($1, $2, $3, $4, $5); 
 `, usersTable)
 
-	var id uint
-	row := r.db.QueryRowContext(ctx, query,
+	_, err := r.db.ExecContext(ctx, query,
 		user.FirstName, user.LastName, user.Email, user.Username, user.Password)
-	err := row.Scan(&id)
 
-	return id, err
+	return err
 }
 
 func (r *AuthPsql) GetUserAuth(ctx context.Context, username string) (core.UserAuth, error) {
