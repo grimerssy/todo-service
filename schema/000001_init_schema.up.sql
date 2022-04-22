@@ -9,7 +9,7 @@ CREATE TABLE users (
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     CONSTRAINT pk_users_id PRIMARY KEY (id)
 );
-CREATE INDEX users_idx ON users (username, password);
+CREATE INDEX idx_users_username ON users (username);
 
 CREATE TABLE todos (
     id SERIAL NOT NULL,

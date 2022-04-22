@@ -80,12 +80,7 @@ func TestAuthPsql_CreateUser(t *testing.T) {
 	}
 }
 
-func TestAuthPsql_GetUserID(t *testing.T) {
-	type input struct {
-		username string
-		password string
-	}
-
+func TestAuthPsql_GetUserAuth(t *testing.T) {
 	const (
 		id       = 1
 		username = "un"
@@ -102,45 +97,43 @@ func TestAuthPsql_GetUserID(t *testing.T) {
 	tests := []struct {
 		name      string
 		mock      func(m sqlmock.Sqlmock)
-		input     input
-		want      uint
+		username  string
+		want      core.UserAuth
 		errAssert assert.ErrorAssertionFunc
 	}{
 		{
 			name: "ok",
 			mock: func(m sqlmock.Sqlmock) {
-				rows := sqlmock.NewRows([]string{"id"}).
-					AddRow(id)
-				m.ExpectQuery("SELECT id FROM "+usersTable).
-					WithArgs(username, password).
+				rows := sqlmock.NewRows([]string{"id", "password"}).
+					AddRow(id, password)
+				m.ExpectQuery("SELECT id, password FROM " + usersTable).
+					WithArgs(username).
 					WillReturnRows(rows)
 			},
-			input: input{
-				username: username,
-				password: password,
+			username: username,
+			want: core.UserAuth{
+				ID:       id,
+				Username: username,
+				Password: password,
 			},
-			want:      id,
 			errAssert: assert.NoError,
 		},
 		{
-			name: "invalid password",
+			name: "invalid username",
 			mock: func(m sqlmock.Sqlmock) {
-				rows := sqlmock.NewRows([]string{"id"})
-				m.ExpectQuery("SELECT id FROM "+usersTable).
-					WithArgs(username, invalid).
+				rows := sqlmock.NewRows([]string{"id", "password"})
+				m.ExpectQuery("SELECT id, password FROM " + usersTable).
+					WithArgs(invalid).
 					WillReturnRows(rows)
 			},
-			input: input{
-				username: username,
-				password: invalid,
-			},
-			want:      0,
+			username:  invalid,
+			want:      core.UserAuth{},
 			errAssert: assert.Error,
 		},
 	}
 	for _, tt := range tests {
 		tt.mock(mock)
-		got, err := r.GetUserID(context.Background(), tt.input.username, tt.input.password)
+		got, err := r.GetUserAuth(context.Background(), tt.username)
 		tt.errAssert(t, err)
 		assert.Equal(t, tt.want, got)
 		assert.NoError(t, mock.ExpectationsWereMet())

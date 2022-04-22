@@ -8,7 +8,7 @@ import (
 
 type Authentication interface {
 	CreateUser(ctx context.Context, user core.User) (uint, error)
-	GetUserID(ctx context.Context, username string, password string) (uint, error)
+	GetUserAuth(ctx context.Context, username string) (core.UserAuth, error)
 }
 
 type Todo interface {

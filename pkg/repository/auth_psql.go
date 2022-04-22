@@ -26,25 +26,23 @@ RETURNING id;
 	var id uint
 	row := r.db.QueryRowContext(ctx, query,
 		user.FirstName, user.LastName, user.Email, user.Username, user.Password)
-	if err := row.Scan(&id); err != nil {
-		return 0, err
-	}
+	err := row.Scan(&id)
 
-	return id, nil
+	return id, err
 }
 
-func (r *AuthPsql) GetUserID(ctx context.Context, username string, password string) (uint, error) {
+func (r *AuthPsql) GetUserAuth(ctx context.Context, username string) (core.UserAuth, error) {
 	query := fmt.Sprintf(`
-SELECT id FROM %s 
-WHERE username = $1 
-	AND password = $2;
+SELECT id, password FROM %s 
+WHERE username = $1
+LIMIT 1;
 `, usersTable)
 
-	var id uint
-	row := r.db.QueryRowContext(ctx, query, username, password)
-	if err := row.Scan(&id); err != nil {
-		return 0, err
-	}
+	var auth core.UserAuth
+	row := r.db.QueryRowContext(ctx, query, username)
+	err := row.Scan(&auth.ID, &auth.Password)
 
-	return id, nil
+	auth.Username = username
+
+	return auth, err
 }
