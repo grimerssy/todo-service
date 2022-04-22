@@ -6,6 +6,11 @@ import (
 	"github.com/grimerssy/todo-service/internal/core"
 )
 
+type Repository struct {
+	User
+	Todo
+}
+
 type User interface {
 	Create(ctx context.Context, user core.User) error
 	GetCredentialsByUsername(ctx context.Context, username string) (core.UserCredentials, error)
@@ -20,16 +25,4 @@ type Todo interface {
 	Patch(ctx context.Context, userId uint, todoId uint, todo core.Todo) error
 	DeleteByID(ctx context.Context, userId uint, todoId uint) error
 	DeleteByCompletion(ctx context.Context, userId uint, completed bool) error
-}
-
-type Repository struct {
-	User
-	Todo
-}
-
-func NewRepository(user User, todo Todo) *Repository {
-	return &Repository{
-		User: user,
-		Todo: todo,
-	}
 }
