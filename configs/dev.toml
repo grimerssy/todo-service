@@ -5,9 +5,12 @@ port = "8080"
 dbname = "todo"
 sslmode = "disable"
 
+[jwt]
+minutesttl = 15
+
 [hashids]
 hashlength = 6
-salts = { "todo" = "stWLM0rFHEbpINHg" }
+salts = { "todo" = "stWLM0rFHEbpINHg", "user" = "lVNhX9FzCOAy0rHP"}
 
 [bcrypt]
 cost = 12

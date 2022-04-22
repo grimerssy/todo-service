@@ -8,6 +8,7 @@ import (
 )
 
 const (
+	UserKey = "user"
 	TodoKey = "todo"
 )
 
