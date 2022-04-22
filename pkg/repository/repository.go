@@ -6,9 +6,9 @@ import (
 	"github.com/grimerssy/todo-service/internal/core"
 )
 
-type Authentication interface {
-	CreateUser(ctx context.Context, user core.User) error
-	GetUserAuth(ctx context.Context, username string) (core.UserAuth, error)
+type User interface {
+	Create(ctx context.Context, user core.User) error
+	GetCredentialsByUsername(ctx context.Context, username string) (core.UserAuth, error)
 }
 
 type Todo interface {
@@ -23,13 +23,13 @@ type Todo interface {
 }
 
 type Repository struct {
-	Authentication
+	User
 	Todo
 }
 
-func NewRepository(auth Authentication, todo Todo) *Repository {
+func NewRepository(user User, todo Todo) *Repository {
 	return &Repository{
-		Authentication: auth,
-		Todo:           todo,
+		User: user,
+		Todo: todo,
 	}
 }

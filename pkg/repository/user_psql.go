@@ -8,15 +8,15 @@ import (
 	"github.com/grimerssy/todo-service/internal/core"
 )
 
-type AuthPsql struct {
+type UserPsql struct {
 	db *sql.DB
 }
 
-func NewAuthPsql(db *sql.DB) *AuthPsql {
-	return &AuthPsql{db: db}
+func NewUserPsql(db *sql.DB) *UserPsql {
+	return &UserPsql{db: db}
 }
 
-func (r *AuthPsql) CreateUser(ctx context.Context, user core.User) error {
+func (r *UserPsql) Create(ctx context.Context, user core.User) error {
 	query := fmt.Sprintf(`
 INSERT INTO %s (first_name, last_name, email, username, password) 
 VALUES ($1, $2, $3, $4, $5); 
@@ -28,7 +28,7 @@ VALUES ($1, $2, $3, $4, $5);
 	return err
 }
 
-func (r *AuthPsql) GetUserAuth(ctx context.Context, username string) (core.UserAuth, error) {
+func (r *UserPsql) GetCredentialsByUsername(ctx context.Context, username string) (core.UserAuth, error) {
 	query := fmt.Sprintf(`
 SELECT id, password FROM %s 
 WHERE username = $1

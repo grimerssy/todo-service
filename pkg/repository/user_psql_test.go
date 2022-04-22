@@ -11,7 +11,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestAuthPsql_CreateUser(t *testing.T) {
+func TestAuthPsql_Create(t *testing.T) {
 	const (
 		id        = 1
 		firstName = "fn"
@@ -25,7 +25,7 @@ func TestAuthPsql_CreateUser(t *testing.T) {
 	require.NoError(t, err)
 	defer db.Close()
 
-	r := NewAuthPsql(db)
+	r := NewUserPsql(db)
 
 	tests := []struct {
 		name      string
@@ -69,13 +69,13 @@ func TestAuthPsql_CreateUser(t *testing.T) {
 	}
 	for _, tt := range tests {
 		tt.mock(mock)
-		err := r.CreateUser(context.Background(), tt.input)
+		err := r.Create(context.Background(), tt.input)
 		tt.errAssert(t, err)
 		assert.NoError(t, mock.ExpectationsWereMet())
 	}
 }
 
-func TestAuthPsql_GetUserAuth(t *testing.T) {
+func TestAuthPsql_GetCredentialsByUsername(t *testing.T) {
 	const (
 		id       = 1
 		username = "un"
@@ -87,7 +87,7 @@ func TestAuthPsql_GetUserAuth(t *testing.T) {
 	require.NoError(t, err)
 	defer db.Close()
 
-	r := NewAuthPsql(db)
+	r := NewUserPsql(db)
 
 	tests := []struct {
 		name      string
@@ -128,7 +128,7 @@ func TestAuthPsql_GetUserAuth(t *testing.T) {
 	}
 	for _, tt := range tests {
 		tt.mock(mock)
-		got, err := r.GetUserAuth(context.Background(), tt.username)
+		got, err := r.GetCredentialsByUsername(context.Background(), tt.username)
 		tt.errAssert(t, err)
 		assert.Equal(t, tt.want, got)
 		assert.NoError(t, mock.ExpectationsWereMet())
