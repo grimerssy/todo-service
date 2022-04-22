@@ -8,7 +8,7 @@ import (
 
 type User interface {
 	Create(ctx context.Context, user core.User) error
-	GetCredentialsByUsername(ctx context.Context, username string) (core.UserAuth, error)
+	GetCredentialsByUsername(ctx context.Context, username string) (core.UserCredentials, error)
 }
 
 type Todo interface {

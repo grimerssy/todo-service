@@ -93,7 +93,7 @@ func TestAuthPsql_GetCredentialsByUsername(t *testing.T) {
 		name      string
 		mock      func(m sqlmock.Sqlmock)
 		username  string
-		want      core.UserAuth
+		want      core.UserCredentials
 		errAssert assert.ErrorAssertionFunc
 	}{
 		{
@@ -106,7 +106,7 @@ func TestAuthPsql_GetCredentialsByUsername(t *testing.T) {
 					WillReturnRows(rows)
 			},
 			username: username,
-			want: core.UserAuth{
+			want: core.UserCredentials{
 				ID:       id,
 				Username: username,
 				Password: password,
@@ -122,7 +122,7 @@ func TestAuthPsql_GetCredentialsByUsername(t *testing.T) {
 					WillReturnRows(rows)
 			},
 			username:  invalid,
-			want:      core.UserAuth{},
+			want:      core.UserCredentials{},
 			errAssert: assert.Error,
 		},
 	}

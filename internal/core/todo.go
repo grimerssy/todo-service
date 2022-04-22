@@ -25,8 +25,8 @@ type TodoUpdate struct {
 }
 
 type TodoResponse struct {
-	Id          uint   `json:"id"`
-	Title       string `json:"title"`
-	Description string `json:"description,omitempty"`
-	Completed   bool   `json:"completed"`
+	Id          interface{} `json:"id"`
+	Title       string      `json:"title"`
+	Description string      `json:"description,omitempty"`
+	Completed   bool        `json:"completed"`
 }

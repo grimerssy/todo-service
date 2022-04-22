@@ -15,7 +15,7 @@ type User struct {
 	UpdatedAt time.Time
 }
 
-type UserAuth struct {
+type UserCredentials struct {
 	ID       uint
 	Username string
 	Password string

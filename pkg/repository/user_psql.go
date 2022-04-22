@@ -28,18 +28,18 @@ VALUES ($1, $2, $3, $4, $5);
 	return err
 }
 
-func (r *UserPsql) GetCredentialsByUsername(ctx context.Context, username string) (core.UserAuth, error) {
+func (r *UserPsql) GetCredentialsByUsername(ctx context.Context, username string) (core.UserCredentials, error) {
 	query := fmt.Sprintf(`
 SELECT id, password FROM %s 
 WHERE username = $1
 LIMIT 1;
 `, usersTable)
 
-	var auth core.UserAuth
+	var cred core.UserCredentials
 	row := r.db.QueryRowContext(ctx, query, username)
-	err := row.Scan(&auth.ID, &auth.Password)
+	err := row.Scan(&cred.ID, &cred.Password)
 
-	auth.Username = username
+	cred.Username = username
 
-	return auth, err
+	return cred, err
 }
