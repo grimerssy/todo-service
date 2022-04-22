@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"errors"
 	"testing"
 
 	"github.com/DATA-DOG/go-sqlmock"
@@ -30,17 +31,14 @@ func TestAuthPsql_CreateUser(t *testing.T) {
 		name      string
 		mock      func(m sqlmock.Sqlmock)
 		input     core.User
-		want      uint
 		errAssert assert.ErrorAssertionFunc
 	}{
 		{
 			name: "ok",
 			mock: func(m sqlmock.Sqlmock) {
-				rows := sqlmock.NewRows([]string{"id"}).
-					AddRow(id)
-				m.ExpectQuery("INSERT INTO "+usersTable).
+				m.ExpectExec("INSERT INTO "+usersTable).
 					WithArgs(firstName, lastName, email, username, password).
-					WillReturnRows(rows)
+					WillReturnResult(sqlmock.NewResult(id, 1))
 			},
 			input: core.User{
 				FirstName: firstName,
@@ -49,16 +47,15 @@ func TestAuthPsql_CreateUser(t *testing.T) {
 				Username:  username,
 				Password:  password,
 			},
-			want:      id,
 			errAssert: assert.NoError,
 		},
 		{
 			name: "fail to insert",
 			mock: func(m sqlmock.Sqlmock) {
-				rows := sqlmock.NewRows([]string{"id"})
-				m.ExpectQuery("INSERT INTO "+usersTable).
+				m.ExpectExec("INSERT INTO "+usersTable).
 					WithArgs(firstName, lastName, email, username, password).
-					WillReturnRows(rows)
+					WillReturnResult(sqlmock.NewResult(0, 0)).
+					WillReturnError(errors.New(""))
 			},
 			input: core.User{
 				FirstName: firstName,
@@ -67,15 +64,13 @@ func TestAuthPsql_CreateUser(t *testing.T) {
 				Username:  username,
 				Password:  password,
 			},
-			want:      0,
 			errAssert: assert.Error,
 		},
 	}
 	for _, tt := range tests {
 		tt.mock(mock)
-		got, err := r.CreateUser(context.Background(), tt.input)
+		err := r.CreateUser(context.Background(), tt.input)
 		tt.errAssert(t, err)
-		assert.Equal(t, tt.want, got)
 		assert.NoError(t, mock.ExpectationsWereMet())
 	}
 }

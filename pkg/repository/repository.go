@@ -7,7 +7,7 @@ import (
 )
 
 type Authentication interface {
-	CreateUser(ctx context.Context, user core.User) (uint, error)
+	CreateUser(ctx context.Context, user core.User) error
 	GetUserAuth(ctx context.Context, username string) (core.UserAuth, error)
 }
 
