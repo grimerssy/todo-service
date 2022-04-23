@@ -30,7 +30,7 @@ func TestEncoderHashids_Encode(t *testing.T) {
 	tests := []struct {
 		name     string
 		input    uint
-		want     string
+		want     interface{}
 		compare  assert.ComparisonAssertionFunc
 		errAsser assert.ErrorAssertionFunc
 	}{
@@ -77,7 +77,7 @@ func TestEncoderHashids_Decode(t *testing.T) {
 
 	tests := []struct {
 		name      string
-		input     string
+		input     interface{}
 		want      uint
 		compare   assert.ComparisonAssertionFunc
 		errAssert assert.ErrorAssertionFunc
