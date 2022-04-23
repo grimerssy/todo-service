@@ -17,7 +17,7 @@ type UserRepository interface {
 }
 
 type TodoRepository interface {
-	Create(ctx context.Context, userId uint, todo core.Todo) (uint, error)
+	Create(ctx context.Context, userId uint, todo core.Todo) error
 	GetByID(ctx context.Context, userId uint, todoId uint) (core.Todo, error)
 	GetByCompletion(ctx context.Context, userId uint, completed bool) ([]core.Todo, error)
 	GetAll(ctx context.Context, userId uint) ([]core.Todo, error)

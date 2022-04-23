@@ -29,7 +29,6 @@ func TestTodoPsql_Create(t *testing.T) {
 		name      string
 		mock      func(m sqlmock.Sqlmock)
 		input     core.Todo
-		want      uint
 		errAssert assert.ErrorAssertionFunc
 	}{
 		{
@@ -45,7 +44,7 @@ func TestTodoPsql_Create(t *testing.T) {
 
 				m.ExpectExec("INSERT INTO "+usersTodosTable).
 					WithArgs(id, id).
-					WillReturnResult(sqlmock.NewResult(1, 1))
+					WillReturnResult(sqlmock.NewResult(id, 1))
 
 				m.ExpectCommit()
 			},
@@ -54,7 +53,6 @@ func TestTodoPsql_Create(t *testing.T) {
 				Description: description,
 				Completed:   completed,
 			},
-			want:      id,
 			errAssert: assert.NoError,
 		},
 		{
@@ -74,15 +72,13 @@ func TestTodoPsql_Create(t *testing.T) {
 				Description: description,
 				Completed:   completed,
 			},
-			want:      0,
 			errAssert: assert.Error,
 		},
 	}
 	for _, tt := range tests {
 		tt.mock(mock)
-		got, err := r.Create(context.Background(), id, tt.input)
+		err := r.Create(context.Background(), id, tt.input)
 		tt.errAssert(t, err)
-		assert.Equal(t, tt.want, got)
 		assert.NoError(t, mock.ExpectationsWereMet())
 	}
 }

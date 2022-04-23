@@ -17,10 +17,10 @@ func NewTodoPsql(db *sql.DB) *TodoPsql {
 	return &TodoPsql{db: db}
 }
 
-func (r *TodoPsql) Create(ctx context.Context, userId uint, todo core.Todo) (uint, error) {
+func (r *TodoPsql) Create(ctx context.Context, userId uint, todo core.Todo) error {
 	tx, err := r.db.BeginTx(ctx, nil)
 	if err != nil {
-		return 0, err
+		return err
 	}
 	defer tx.Rollback()
 
@@ -33,7 +33,7 @@ RETURNING id;
 	var todoId uint
 	row := tx.QueryRowContext(ctx, query, todo.Title, todo.Description, todo.Completed)
 	if err := row.Scan(&todoId); err != nil {
-		return 0, err
+		return err
 	}
 
 	query = fmt.Sprintf(`
@@ -42,10 +42,10 @@ VALUES ($1, $2);
 `, usersTodosTable)
 
 	if _, err := tx.ExecContext(ctx, query, userId, todoId); err != nil {
-		return 0, err
+		return err
 	}
 
-	return todoId, tx.Commit()
+	return tx.Commit()
 }
 
 func (r *TodoPsql) GetByID(ctx context.Context, userId uint, todoId uint) (core.Todo, error) {
