@@ -332,7 +332,7 @@ func TestTodoPsql_GetAll(t *testing.T) {
 	}
 }
 
-func TestTodoPsql_Update(t *testing.T) {
+func TestTodoPsql_UpdateByID(t *testing.T) {
 	const (
 		id          = 1
 		title       = "t"
@@ -405,13 +405,13 @@ func TestTodoPsql_Update(t *testing.T) {
 	}
 	for _, tt := range tests {
 		tt.mock(mock)
-		err := r.Update(context.Background(), tt.userID, tt.todoID, tt.input)
+		err := r.UpdateByID(context.Background(), tt.userID, tt.todoID, tt.input)
 		tt.errAssert(t, err)
 		assert.NoError(t, mock.ExpectationsWereMet())
 	}
 }
 
-func TestTodoPsql_Patch(t *testing.T) {
+func TestTodoPsql_PatchID(t *testing.T) {
 	const (
 		id          = 1
 		title       = "t"
@@ -583,7 +583,7 @@ func TestTodoPsql_Patch(t *testing.T) {
 	}
 	for _, tt := range tests {
 		tt.mock(mock)
-		err := r.Patch(context.Background(), tt.userID, tt.todoID, tt.input)
+		err := r.PatchByID(context.Background(), tt.userID, tt.todoID, tt.input)
 		tt.errAssert(t, err)
 		assert.NoError(t, mock.ExpectationsWereMet())
 	}

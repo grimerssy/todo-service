@@ -13,12 +13,7 @@ type Todo struct {
 	UpdatedAt   time.Time
 }
 
-type TodoCreate struct {
-	Title       string `json:"title"`
-	Description string `json:"description"`
-}
-
-type TodoUpdate struct {
+type TodoRequest struct {
 	Title       string `json:"title"`
 	Description string `json:"description"`
 	Completed   bool   `json:"completed"`

@@ -21,15 +21,10 @@ type UserCredentials struct {
 	Password string
 }
 
-type UserSignUp struct {
+type UserRequest struct {
 	FirstName string `json:"firstName"`
 	LastName  string `json:"lastName"`
 	Email     string `json:"email"`
 	Username  string `json:"username"`
 	Password  string `json:"password"`
-}
-
-type UserSignIn struct {
-	Username string `json:"username"`
-	Password string `json:"password"`
 }

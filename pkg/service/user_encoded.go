@@ -22,8 +22,8 @@ func NewUserEncoded(hasher Hasher, encoder Encoder, repository repository.UserRe
 	}
 }
 
-func (s *UserEncoded) Create(ctx context.Context, userSU core.UserSignUp) error {
-	user, err := signUpToUser(userSU)
+func (s *UserEncoded) Create(ctx context.Context, userReq core.UserRequest) error {
+	user, err := s.requestToUser(userReq)
 	if err != nil {
 		return err
 	}
@@ -35,13 +35,13 @@ func (s *UserEncoded) Create(ctx context.Context, userSU core.UserSignUp) error 
 	return s.repository.Create(ctx, user)
 }
 
-func (s *UserEncoded) GetUserId(ctx context.Context, userSI core.UserSignIn) (interface{}, error) {
-	cred, err := s.repository.GetCredentialsByUsername(ctx, userSI.Username)
+func (s *UserEncoded) GetUserId(ctx context.Context, userReq core.UserRequest) (interface{}, error) {
+	cred, err := s.repository.GetCredentialsByUsername(ctx, userReq.Username)
 	if err != nil {
 		return nil, err
 	}
 
-	if match := s.hasher.CompareHashAndPassword(ctx, cred.Password, userSI.Password); !match {
+	if match := s.hasher.CompareHashAndPassword(ctx, cred.Password, userReq.Password); !match {
 		return nil, errors.New("invalid password")
 	}
 
@@ -53,7 +53,7 @@ func (s *UserEncoded) GetUserId(ctx context.Context, userSI core.UserSignIn) (in
 	return id, nil
 }
 
-func signUpToUser(su core.UserSignUp) (core.User, error) {
+func (*UserEncoded) requestToUser(su core.UserRequest) (core.User, error) {
 	var user core.User
 
 	if len(su.FirstName) == 0 {

@@ -17,7 +17,7 @@ func NewTodoPsql(db *sql.DB) *TodoPsql {
 	return &TodoPsql{db: db}
 }
 
-func (r *TodoPsql) Create(ctx context.Context, userId uint, todo core.Todo) error {
+func (r *TodoPsql) Create(ctx context.Context, userID uint, todo core.Todo) error {
 	tx, err := r.db.BeginTx(ctx, nil)
 	if err != nil {
 		return err
@@ -41,14 +41,14 @@ INSERT INTO %s (user_id, todo_id)
 VALUES ($1, $2);
 `, usersTodosTable)
 
-	if _, err := tx.ExecContext(ctx, query, userId, todoId); err != nil {
+	if _, err := tx.ExecContext(ctx, query, userID, todoId); err != nil {
 		return err
 	}
 
 	return tx.Commit()
 }
 
-func (r *TodoPsql) GetByID(ctx context.Context, userId uint, todoId uint) (core.Todo, error) {
+func (r *TodoPsql) GetByID(ctx context.Context, userID uint, todoID uint) (core.Todo, error) {
 	query := fmt.Sprintf(`
 SELECT td.id, td.title, td.description, td.completed, td.created_at, td.updated_at
 FROM %s td
@@ -59,14 +59,14 @@ LIMIT 1;
 `, todosTable, usersTodosTable)
 
 	var todo core.Todo
-	row := r.db.QueryRowContext(ctx, query, userId, todoId)
+	row := r.db.QueryRowContext(ctx, query, userID, todoID)
 	err := row.Scan(
 		&todo.ID, &todo.Title, &todo.Description, &todo.Completed, &todo.CreatedAt, &todo.UpdatedAt)
 
 	return todo, err
 }
 
-func (r *TodoPsql) GetByCompletion(ctx context.Context, userId uint, completed bool) ([]core.Todo, error) {
+func (r *TodoPsql) GetByCompletion(ctx context.Context, userID uint, completed bool) ([]core.Todo, error) {
 	query := fmt.Sprintf(`
 SELECT td.id, td.title, td.description, td.completed, td.created_at, td.updated_at
 FROM %s td
@@ -76,7 +76,7 @@ WHERE td.completed = $2
 `, todosTable, usersTodosTable)
 
 	todos := []core.Todo{}
-	rows, err := r.db.QueryContext(ctx, query, userId, completed)
+	rows, err := r.db.QueryContext(ctx, query, userID, completed)
 	if err != nil {
 		return todos, err
 	}
@@ -94,7 +94,7 @@ WHERE td.completed = $2
 	return todos, rows.Err()
 }
 
-func (r *TodoPsql) GetAll(ctx context.Context, userId uint) ([]core.Todo, error) {
+func (r *TodoPsql) GetAll(ctx context.Context, userID uint) ([]core.Todo, error) {
 	query := fmt.Sprintf(`
 SELECT td.id, td.title, td.description, td.completed, td.created_at, td.updated_at
 FROM %s td
@@ -103,7 +103,7 @@ ON ut.todo_id = td.id;
 `, todosTable, usersTodosTable)
 
 	todos := []core.Todo{}
-	rows, err := r.db.QueryContext(ctx, query, userId)
+	rows, err := r.db.QueryContext(ctx, query, userID)
 	if err != nil {
 		return todos, err
 	}
@@ -121,7 +121,7 @@ ON ut.todo_id = td.id;
 	return todos, rows.Err()
 }
 
-func (r *TodoPsql) Update(ctx context.Context, userId uint, todoId uint, todo core.Todo) error {
+func (r *TodoPsql) UpdateByID(ctx context.Context, userID uint, todoID uint, todo core.Todo) error {
 	query := fmt.Sprintf(`
 UPDATE %s td
 SET title = $1,
@@ -133,11 +133,11 @@ WHERE ut.user_id = $4
     AND td.id = $5
 `, todosTable, usersTodosTable)
 
-	_, err := r.db.ExecContext(ctx, query, todo.Title, todo.Description, todo.Completed, userId, todoId)
+	_, err := r.db.ExecContext(ctx, query, todo.Title, todo.Description, todo.Completed, userID, todoID)
 	return err
 }
 
-func (r *TodoPsql) Patch(ctx context.Context, userId uint, todoId uint, todo core.Todo) error {
+func (r *TodoPsql) PatchByID(ctx context.Context, userID uint, todoID uint, todo core.Todo) error {
 	setStatements := make([]string, 0)
 	args := make([]interface{}, 0)
 	argId := 1
@@ -167,13 +167,13 @@ WHERE ut.user_id = $%d
     AND td.id = $%d
 `, todosTable, setQuery, usersTodosTable, argId, argId+1)
 
-	args = append(args, userId, todoId)
+	args = append(args, userID, todoID)
 
 	_, err := r.db.ExecContext(ctx, query, args...)
 	return err
 }
 
-func (r *TodoPsql) DeleteByID(ctx context.Context, userId uint, todoId uint) error {
+func (r *TodoPsql) DeleteByID(ctx context.Context, userID uint, todoID uint) error {
 	query := fmt.Sprintf(`
 DELETE FROM %s td
 USING %s ut
@@ -182,11 +182,11 @@ WHERE ut.user_id = $1
     AND td.id = $2;
 `, todosTable, usersTodosTable)
 
-	_, err := r.db.ExecContext(ctx, query, userId, todoId)
+	_, err := r.db.ExecContext(ctx, query, userID, todoID)
 	return err
 }
 
-func (r *TodoPsql) DeleteByCompletion(ctx context.Context, userId uint, completed bool) error {
+func (r *TodoPsql) DeleteByCompletion(ctx context.Context, userID uint, completed bool) error {
 	query := fmt.Sprintf(`
 DELETE FROM %s td
 USING %s ut
@@ -195,6 +195,6 @@ WHERE ut.user_id = $1
     AND td.completed = $2;
 `, todosTable, usersTodosTable)
 
-	_, err := r.db.ExecContext(ctx, query, userId, completed)
+	_, err := r.db.ExecContext(ctx, query, userID, completed)
 	return err
 }

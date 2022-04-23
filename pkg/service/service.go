@@ -11,13 +11,13 @@ type Service struct {
 }
 
 type AuthenticationService interface {
-	GenerateToken(ctx context.Context, userSI core.UserSignIn) (string, error)
+	GenerateToken(ctx context.Context, userReq core.UserRequest) (string, error)
 	ParseToken(ctx context.Context, tokenStr string) (interface{}, error)
 }
 
 type UserService interface {
-	Create(ctx context.Context, userSU core.UserSignUp) error
-	GetUserId(ctx context.Context, userSI core.UserSignIn) (interface{}, error)
+	Create(ctx context.Context, userReq core.UserRequest) error
+	GetUserId(ctx context.Context, userReq core.UserRequest) (interface{}, error)
 }
 
 type Hasher interface {
@@ -26,6 +26,6 @@ type Hasher interface {
 }
 
 type Encoder interface {
-	Encode(ctx context.Context, id uint) (string, error)
-	Decode(ctx context.Context, hash string) (uint, error)
+	Encode(ctx context.Context, id uint) (interface{}, error)
+	Decode(ctx context.Context, encoded interface{}) (uint, error)
 }

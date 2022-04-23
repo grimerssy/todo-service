@@ -34,8 +34,8 @@ func NewAuthJWT(cfg ConfigJWT, user UserService) *AuthJWT {
 	}
 }
 
-func (s *AuthJWT) GenerateToken(ctx context.Context, userSI core.UserSignIn) (string, error) {
-	userID, err := s.userService.GetUserId(ctx, userSI)
+func (s *AuthJWT) GenerateToken(ctx context.Context, userReq core.UserRequest) (string, error) {
+	userID, err := s.userService.GetUserId(ctx, userReq)
 	if err != nil {
 		return "", err
 	}
