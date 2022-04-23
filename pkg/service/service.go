@@ -8,6 +8,7 @@ import (
 
 type Service struct {
 	AuthenticationService
+	UserService
 	TodoService
 }
 
