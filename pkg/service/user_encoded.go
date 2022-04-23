@@ -11,10 +11,10 @@ import (
 type UserEncoded struct {
 	hasher     Hasher
 	encoder    Encoder
-	repository repository.User
+	repository repository.UserRepository
 }
 
-func NewUserEncoded(hasher Hasher, encoder Encoder, repository repository.User) *UserEncoded {
+func NewUserEncoded(hasher Hasher, encoder Encoder, repository repository.UserRepository) *UserEncoded {
 	return &UserEncoded{
 		hasher:     hasher,
 		encoder:    encoder,

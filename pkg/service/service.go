@@ -7,15 +7,15 @@ import (
 )
 
 type Service struct {
-	Authentication
+	AuthenticationService
 }
 
-type Authentication interface {
+type AuthenticationService interface {
 	GenerateToken(ctx context.Context, userSI core.UserSignIn) (string, error)
 	ParseToken(ctx context.Context, tokenStr string) (interface{}, error)
 }
 
-type User interface {
+type UserService interface {
 	Create(ctx context.Context, userSU core.UserSignUp) error
 	GetUserId(ctx context.Context, userSI core.UserSignIn) (interface{}, error)
 }

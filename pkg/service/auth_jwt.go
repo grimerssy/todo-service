@@ -16,9 +16,9 @@ type ConfigJWT struct {
 }
 
 type AuthJWT struct {
-	tokenTTL  time.Duration
-	secretJWT string
-	user      User
+	tokenTTL    time.Duration
+	secretJWT   string
+	userService UserService
 }
 
 type claimsJWT struct {
@@ -26,16 +26,16 @@ type claimsJWT struct {
 	UserId interface{} `json:"userId"`
 }
 
-func NewAuthJWT(cfg ConfigJWT, user User) *AuthJWT {
+func NewAuthJWT(cfg ConfigJWT, user UserService) *AuthJWT {
 	return &AuthJWT{
-		tokenTTL:  time.Duration(cfg.minutesTTL) * time.Minute,
-		secretJWT: cfg.secret,
-		user:      user,
+		tokenTTL:    time.Duration(cfg.minutesTTL) * time.Minute,
+		secretJWT:   cfg.secret,
+		userService: user,
 	}
 }
 
 func (s *AuthJWT) GenerateToken(ctx context.Context, userSI core.UserSignIn) (string, error) {
-	userID, err := s.user.GetUserId(ctx, userSI)
+	userID, err := s.userService.GetUserId(ctx, userSI)
 	if err != nil {
 		return "", err
 	}
