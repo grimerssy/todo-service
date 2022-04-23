@@ -14,14 +14,14 @@ type Todo struct {
 }
 
 type TodoCreate struct {
-	Title       string `json:"title" binding:"required"`
+	Title       string `json:"title"`
 	Description string `json:"description"`
 }
 
 type TodoUpdate struct {
 	Title       string `json:"title"`
 	Description string `json:"description"`
-	Completed   bool   `json:"completed" binding:"required"`
+	Completed   bool   `json:"completed"`
 }
 
 type TodoResponse struct {

@@ -22,14 +22,14 @@ type UserCredentials struct {
 }
 
 type UserSignUp struct {
-	FirstName string `json:"firstName" binding:"required"`
-	LastName  string `json:"lastName" binding:"required"`
-	Email     string `json:"email" binding:"required"`
-	Username  string `json:"username" binding:"required"`
-	Password  string `json:"password" binding:"required"`
+	FirstName string `json:"firstName"`
+	LastName  string `json:"lastName"`
+	Email     string `json:"email"`
+	Username  string `json:"username"`
+	Password  string `json:"password"`
 }
 
 type UserSignIn struct {
-	Username string `json:"username" binding:"required"`
-	Password string `json:"password" binding:"required"`
+	Username string `json:"username"`
+	Password string `json:"password"`
 }
