@@ -11,8 +11,8 @@ import (
 )
 
 type ConfigJWT struct {
-	minutesTTL uint
-	secret     string
+	MinutesTTL uint
+	Secret     string
 }
 
 type AuthJWT struct {
@@ -28,8 +28,8 @@ type claimsJWT struct {
 
 func NewAuthJWT(cfg ConfigJWT, user UserService) *AuthJWT {
 	return &AuthJWT{
-		tokenTTL:    time.Duration(cfg.minutesTTL) * time.Minute,
-		secretJWT:   cfg.secret,
+		tokenTTL:    time.Duration(cfg.MinutesTTL) * time.Minute,
+		secretJWT:   cfg.Secret,
 		userService: user,
 	}
 }

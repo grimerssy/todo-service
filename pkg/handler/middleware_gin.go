@@ -18,6 +18,12 @@ type MiddlewareGin struct {
 	authService service.AuthService
 }
 
+func NewMiddlewareGin(authService service.AuthService) *MiddlewareGin {
+	return &MiddlewareGin{
+		authService: authService,
+	}
+}
+
 func (h *MiddlewareGin) authorize(c *gin.Context) {
 	header := c.GetHeader(authorizationHeader)
 	ctx := context.TODO()

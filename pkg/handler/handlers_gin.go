@@ -5,9 +5,9 @@ import (
 )
 
 type HandlersGin struct {
-	auth       AuthGin
-	middleware MiddlewareGin
-	todo       TodoGin
+	Auth       *AuthGin
+	Middleware *MiddlewareGin
+	Todo       *TodoGin
 }
 
 func (h *HandlersGin) InitRoutes() *gin.Engine {
@@ -15,22 +15,22 @@ func (h *HandlersGin) InitRoutes() *gin.Engine {
 
 	auth := router.Group("/auth")
 	{
-		auth.POST("/sign-up", h.auth.signUp)
-		auth.POST("/sign-in", h.auth.signIn)
+		auth.POST("/sign-up", h.Auth.signUp)
+		auth.POST("/sign-in", h.Auth.signIn)
 	}
 
-	api := router.Group("/api", h.middleware.authorize)
+	api := router.Group("/api", h.Middleware.authorize)
 	{
 		todos := api.Group("/todos")
 		{
-			todos.POST("/", h.todo.create)
-			todos.GET("/:id", h.todo.getByID)
-			todos.GET("/pending", h.todo.getPending)
-			todos.GET("/", h.todo.getAll)
-			todos.PUT("/:id", h.todo.updateByID)
-			todos.PATCH("/:id", h.todo.patchByID)
-			todos.DELETE("/:id", h.todo.deleteByID)
-			todos.DELETE("/completed", h.todo.deleteCompleted)
+			todos.POST("/", h.Todo.create)
+			todos.GET("/:id", h.Todo.getByID)
+			todos.GET("/pending", h.Todo.getPending)
+			todos.GET("/", h.Todo.getAll)
+			todos.PUT("/:id", h.Todo.updateByID)
+			todos.PATCH("/:id", h.Todo.patchByID)
+			todos.DELETE("/:id", h.Todo.deleteByID)
+			todos.DELETE("/completed", h.Todo.deleteCompleted)
 		}
 	}
 

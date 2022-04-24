@@ -1,6 +1,12 @@
 run:
 	go run ./cmd/main.go
 
+build:
+	go build -o ./bin/todo-service ./cmd
+
+exec:
+	./bin/todo-service
+
 test:
 	go test ./...
 

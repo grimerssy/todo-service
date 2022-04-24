@@ -14,6 +14,13 @@ type AuthGin struct {
 	userService service.UserService
 }
 
+func NewAuthGin(authService service.AuthService, userService service.UserService) *AuthGin {
+	return &AuthGin{
+		authService: authService,
+		userService: userService,
+	}
+}
+
 func (h *AuthGin) signUp(c *gin.Context) {
 	var userReq core.UserRequest
 	ctx := context.TODO()

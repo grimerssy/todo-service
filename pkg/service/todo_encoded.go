@@ -9,14 +9,16 @@ import (
 )
 
 type TodoEncoded struct {
-	encoder    Encoder
-	repository repository.TodoRepository
+	userEncoder Encoder
+	todoEncoder Encoder
+	repository  repository.TodoRepository
 }
 
-func NewTodoEncoded(encoder Encoder, repository repository.TodoRepository) *TodoEncoded {
+func NewTodoEncoded(userEncoder, todoEncoder Encoder, repository repository.TodoRepository) *TodoEncoded {
 	return &TodoEncoded{
-		encoder:    encoder,
-		repository: repository,
+		userEncoder: userEncoder,
+		todoEncoder: todoEncoder,
+		repository:  repository,
 	}
 }
 
@@ -26,7 +28,7 @@ func (s *TodoEncoded) Create(ctx context.Context, userID interface{}, todoReq co
 		return err
 	}
 
-	uintUserID, err := s.encoder.Decode(ctx, userID)
+	uintUserID, err := s.userEncoder.Decode(ctx, userID)
 	if err != nil {
 		return err
 	}
@@ -37,12 +39,12 @@ func (s *TodoEncoded) Create(ctx context.Context, userID interface{}, todoReq co
 func (s *TodoEncoded) GetByID(ctx context.Context, userID interface{}, todoID interface{}) (core.TodoResponse, error) {
 	var response core.TodoResponse
 
-	uintUserID, err := s.encoder.Decode(ctx, userID)
+	uintUserID, err := s.userEncoder.Decode(ctx, userID)
 	if err != nil {
 		return response, err
 	}
 
-	uintTodoID, err := s.encoder.Decode(ctx, todoID)
+	uintTodoID, err := s.todoEncoder.Decode(ctx, todoID)
 	if err != nil {
 		return response, err
 	}
@@ -65,7 +67,7 @@ func (s *TodoEncoded) GetByID(ctx context.Context, userID interface{}, todoID in
 func (s *TodoEncoded) GetByCompletion(ctx context.Context, userID interface{}, completed bool) ([]core.TodoResponse, error) {
 	var responses []core.TodoResponse
 
-	uintUserID, err := s.encoder.Decode(ctx, userID)
+	uintUserID, err := s.userEncoder.Decode(ctx, userID)
 	if err != nil {
 		return responses, err
 	}
@@ -78,7 +80,7 @@ func (s *TodoEncoded) GetByCompletion(ctx context.Context, userID interface{}, c
 	responses = make([]core.TodoResponse, len(todos))
 
 	for i, todo := range todos {
-		todoID, err := s.encoder.Encode(ctx, todo.ID)
+		todoID, err := s.todoEncoder.Encode(ctx, todo.ID)
 		if err != nil {
 			return responses, err
 		}
@@ -97,7 +99,7 @@ func (s *TodoEncoded) GetByCompletion(ctx context.Context, userID interface{}, c
 func (s *TodoEncoded) GetAll(ctx context.Context, userID interface{}) ([]core.TodoResponse, error) {
 	var responses []core.TodoResponse
 
-	uintUserID, err := s.encoder.Decode(ctx, userID)
+	uintUserID, err := s.userEncoder.Decode(ctx, userID)
 	if err != nil {
 		return responses, err
 	}
@@ -110,7 +112,7 @@ func (s *TodoEncoded) GetAll(ctx context.Context, userID interface{}) ([]core.To
 	responses = make([]core.TodoResponse, len(todos))
 
 	for i, todo := range todos {
-		todoID, err := s.encoder.Encode(ctx, todo.ID)
+		todoID, err := s.todoEncoder.Encode(ctx, todo.ID)
 		if err != nil {
 			return responses, err
 		}
@@ -132,12 +134,12 @@ func (s *TodoEncoded) UpdateByID(ctx context.Context, userID interface{}, todoID
 		return err
 	}
 
-	uintUserID, err := s.encoder.Decode(ctx, userID)
+	uintUserID, err := s.userEncoder.Decode(ctx, userID)
 	if err != nil {
 		return err
 	}
 
-	uintTodoID, err := s.encoder.Decode(ctx, todoID)
+	uintTodoID, err := s.todoEncoder.Decode(ctx, todoID)
 	if err != nil {
 		return err
 	}
@@ -152,12 +154,12 @@ func (s *TodoEncoded) PatchByID(ctx context.Context, userID interface{}, todoID 
 		Completed:   todoReq.Completed,
 	}
 
-	uintUserID, err := s.encoder.Decode(ctx, userID)
+	uintUserID, err := s.userEncoder.Decode(ctx, userID)
 	if err != nil {
 		return err
 	}
 
-	uintTodoID, err := s.encoder.Decode(ctx, todoID)
+	uintTodoID, err := s.todoEncoder.Decode(ctx, todoID)
 	if err != nil {
 		return err
 	}
@@ -166,12 +168,12 @@ func (s *TodoEncoded) PatchByID(ctx context.Context, userID interface{}, todoID 
 }
 
 func (s *TodoEncoded) DeleteByID(ctx context.Context, userID interface{}, todoID interface{}) error {
-	uintUserID, err := s.encoder.Decode(ctx, userID)
+	uintUserID, err := s.userEncoder.Decode(ctx, userID)
 	if err != nil {
 		return err
 	}
 
-	uintTodoID, err := s.encoder.Decode(ctx, todoID)
+	uintTodoID, err := s.todoEncoder.Decode(ctx, todoID)
 	if err != nil {
 		return err
 	}
@@ -180,7 +182,7 @@ func (s *TodoEncoded) DeleteByID(ctx context.Context, userID interface{}, todoID
 }
 
 func (s *TodoEncoded) DeleteByCompletion(ctx context.Context, userID interface{}, completed bool) error {
-	uintUserID, err := s.encoder.Decode(ctx, userID)
+	uintUserID, err := s.userEncoder.Decode(ctx, userID)
 	if err != nil {
 		return err
 	}

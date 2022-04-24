@@ -1,7 +1,13 @@
+[http]
+port = "8080"
+headerbytes = 1_000_000
+readseconds = 10
+writeseconds = 10
+
 [postgres]
 username = "todo_service"
-host = "127.0.0.1"
-port = "8080"
+host = "localhost"
+port = "5432"
 dbname = "todo"
 sslmode = "disable"
 

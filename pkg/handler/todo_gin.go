@@ -13,6 +13,12 @@ type TodoGin struct {
 	todoService service.TodoService
 }
 
+func NewTodoGin(todoService service.TodoService) *TodoGin {
+	return &TodoGin{
+		todoService: todoService,
+	}
+}
+
 func (h *TodoGin) create(c *gin.Context) {
 	ctx := context.TODO()
 
