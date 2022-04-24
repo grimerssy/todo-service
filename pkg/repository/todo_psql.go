@@ -14,13 +14,15 @@ type TodoPsql struct {
 }
 
 func NewTodoPsql(db *sql.DB) *TodoPsql {
-	return &TodoPsql{db: db}
+	return &TodoPsql{
+		db: db,
+	}
 }
 
 func (r *TodoPsql) Create(ctx context.Context, userID uint, todo core.Todo) error {
 	tx, err := r.db.BeginTx(ctx, nil)
 	if err != nil {
-		return err
+		return fmt.Errorf("could not begin transaction: %s", err.Error())
 	}
 	defer tx.Rollback()
 
@@ -30,10 +32,10 @@ VALUES ($1, $2, $3)
 RETURNING id;
 `, todosTable)
 
-	var todoId uint
+	var todoID uint
 	row := tx.QueryRowContext(ctx, query, todo.Title, todo.Description, todo.Completed)
-	if err := row.Scan(&todoId); err != nil {
-		return err
+	if err := row.Scan(&todoID); err != nil {
+		return fmt.Errorf("could not scan row: %s", err.Error())
 	}
 
 	query = fmt.Sprintf(`
@@ -41,11 +43,14 @@ INSERT INTO %s (user_id, todo_id)
 VALUES ($1, $2);
 `, usersTodosTable)
 
-	if _, err := tx.ExecContext(ctx, query, userID, todoId); err != nil {
-		return err
+	if _, err := tx.ExecContext(ctx, query, userID, todoID); err != nil {
+		return fmt.Errorf("could not execute query: %s", err.Error())
 	}
 
-	return tx.Commit()
+	if err := tx.Commit(); err != nil {
+		return fmt.Errorf("could not commit transaction: %s", err.Error())
+	}
+	return nil
 }
 
 func (r *TodoPsql) GetByID(ctx context.Context, userID uint, todoID uint) (core.Todo, error) {
@@ -63,7 +68,11 @@ LIMIT 1;
 	err := row.Scan(
 		&todo.ID, &todo.Title, &todo.Description, &todo.Completed, &todo.CreatedAt, &todo.UpdatedAt)
 
-	return todo, err
+	if err != nil {
+		return todo, fmt.Errorf("could not scan row: %s", err.Error())
+	}
+
+	return todo, nil
 }
 
 func (r *TodoPsql) GetByCompletion(ctx context.Context, userID uint, completed bool) ([]core.Todo, error) {
@@ -78,7 +87,7 @@ WHERE td.completed = $2
 	todos := []core.Todo{}
 	rows, err := r.db.QueryContext(ctx, query, userID, completed)
 	if err != nil {
-		return todos, err
+		return todos, fmt.Errorf("could not execute query: %s", err.Error())
 	}
 
 	for rows.Next() {
@@ -86,12 +95,16 @@ WHERE td.completed = $2
 		err := rows.Scan(
 			&todo.ID, &todo.Title, &todo.Description, &todo.Completed, &todo.CreatedAt, &todo.UpdatedAt)
 		if err != nil {
-			return todos, err
+			return todos, fmt.Errorf("could not scan row: %s", err.Error())
 		}
 		todos = append(todos, todo)
 	}
 
-	return todos, rows.Err()
+	if err := rows.Err(); err != nil {
+		return todos, fmt.Errorf("could not scan rows: %s", err.Error())
+	}
+
+	return todos, nil
 }
 
 func (r *TodoPsql) GetAll(ctx context.Context, userID uint) ([]core.Todo, error) {
@@ -105,7 +118,7 @@ ON ut.todo_id = td.id;
 	todos := []core.Todo{}
 	rows, err := r.db.QueryContext(ctx, query, userID)
 	if err != nil {
-		return todos, err
+		return todos, fmt.Errorf("could not execute query: %s", err.Error())
 	}
 
 	for rows.Next() {
@@ -113,12 +126,16 @@ ON ut.todo_id = td.id;
 		err := rows.Scan(
 			&todo.ID, &todo.Title, &todo.Description, &todo.Completed, &todo.CreatedAt, &todo.UpdatedAt)
 		if err != nil {
-			return todos, err
+			return todos, fmt.Errorf("could not scan row: %s", err.Error())
 		}
 		todos = append(todos, todo)
 	}
 
-	return todos, rows.Err()
+	if err := rows.Err(); err != nil {
+		return todos, fmt.Errorf("could not scan rows: %s", err.Error())
+	}
+
+	return todos, nil
 }
 
 func (r *TodoPsql) UpdateByID(ctx context.Context, userID uint, todoID uint, todo core.Todo) error {
@@ -134,27 +151,31 @@ WHERE ut.user_id = $4
 `, todosTable, usersTodosTable)
 
 	_, err := r.db.ExecContext(ctx, query, todo.Title, todo.Description, todo.Completed, userID, todoID)
-	return err
+	if err != nil {
+		return fmt.Errorf("could not execute query: %s", err.Error())
+	}
+
+	return nil
 }
 
 func (r *TodoPsql) PatchByID(ctx context.Context, userID uint, todoID uint, todo core.Todo) error {
 	setStatements := make([]string, 0)
 	args := make([]interface{}, 0)
-	argId := 1
+	argID := 1
 
 	if len(todo.Title) != 0 {
-		setStatements = append(setStatements, fmt.Sprintf("title = $%d", argId))
+		setStatements = append(setStatements, fmt.Sprintf("title = $%d", argID))
 		args = append(args, todo.Title)
-		argId++
+		argID++
 	}
 	if len(todo.Description) != 0 {
-		setStatements = append(setStatements, fmt.Sprintf("description = $%d", argId))
+		setStatements = append(setStatements, fmt.Sprintf("description = $%d", argID))
 		args = append(args, todo.Description)
-		argId++
+		argID++
 	}
-	setStatements = append(setStatements, fmt.Sprintf("completed = $%d", argId))
+	setStatements = append(setStatements, fmt.Sprintf("completed = $%d", argID))
 	args = append(args, todo.Completed)
-	argId++
+	argID++
 
 	setQuery := strings.Join(setStatements, ", ")
 
@@ -165,12 +186,16 @@ FROM %s ut
 WHERE ut.user_id = $%d
     AND ut.todo_id = td.id
     AND td.id = $%d
-`, todosTable, setQuery, usersTodosTable, argId, argId+1)
+`, todosTable, setQuery, usersTodosTable, argID, argID+1)
 
 	args = append(args, userID, todoID)
 
 	_, err := r.db.ExecContext(ctx, query, args...)
-	return err
+	if err != nil {
+		return fmt.Errorf("could not execute query: %s", err.Error())
+	}
+
+	return nil
 }
 
 func (r *TodoPsql) DeleteByID(ctx context.Context, userID uint, todoID uint) error {
@@ -183,7 +208,11 @@ WHERE ut.user_id = $1
 `, todosTable, usersTodosTable)
 
 	_, err := r.db.ExecContext(ctx, query, userID, todoID)
-	return err
+	if err != nil {
+		return fmt.Errorf("could not execute query: %s", err.Error())
+	}
+
+	return nil
 }
 
 func (r *TodoPsql) DeleteByCompletion(ctx context.Context, userID uint, completed bool) error {
@@ -196,5 +225,9 @@ WHERE ut.user_id = $1
 `, todosTable, usersTodosTable)
 
 	_, err := r.db.ExecContext(ctx, query, userID, completed)
-	return err
+	if err != nil {
+		return fmt.Errorf("could not execute query: %s", err.Error())
+	}
+
+	return nil
 }

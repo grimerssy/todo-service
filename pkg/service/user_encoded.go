@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"errors"
+	"fmt"
 
 	"github.com/grimerssy/todo-service/internal/core"
 	"github.com/grimerssy/todo-service/pkg/repository"
@@ -25,20 +26,24 @@ func NewUserEncoded(hasher Hasher, encoder Encoder, repository repository.UserRe
 func (s *UserEncoded) Create(ctx context.Context, userReq core.UserRequest) error {
 	user, err := s.requestToUser(userReq)
 	if err != nil {
-		return err
+		return fmt.Errorf("could not convert request to user: %s", err.Error())
 	}
 
 	if user.Password, err = s.hasher.Hash(ctx, user.Password); err != nil {
 		return err
 	}
 
-	return s.repository.Create(ctx, user)
+	if err := s.repository.Create(ctx, user); err != nil {
+		return fmt.Errorf("could not create user: %s", err.Error())
+	}
+
+	return nil
 }
 
 func (s *UserEncoded) GetUserId(ctx context.Context, userReq core.UserRequest) (interface{}, error) {
 	cred, err := s.repository.GetCredentialsByUsername(ctx, userReq.Username)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("could not get user credentials: %s", err.Error())
 	}
 
 	if match := s.hasher.CompareHashAndPassword(ctx, cred.Password, userReq.Password); !match {
@@ -47,7 +52,7 @@ func (s *UserEncoded) GetUserId(ctx context.Context, userReq core.UserRequest) (
 
 	id, err := s.encoder.Encode(ctx, cred.ID)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("could not encode user id: %s", err.Error())
 	}
 
 	return id, nil

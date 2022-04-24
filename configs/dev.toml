@@ -1,3 +1,5 @@
+logformatting = "Text"
+
 [http]
 port = "8080"
 headerbytes = 1_000_000

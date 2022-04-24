@@ -13,7 +13,9 @@ type UserPsql struct {
 }
 
 func NewUserPsql(db *sql.DB) *UserPsql {
-	return &UserPsql{db: db}
+	return &UserPsql{
+		db: db,
+	}
 }
 
 func (r *UserPsql) Create(ctx context.Context, user core.User) error {
@@ -25,7 +27,11 @@ VALUES ($1, $2, $3, $4, $5);
 	_, err := r.db.ExecContext(ctx, query,
 		user.FirstName, user.LastName, user.Email, user.Username, user.Password)
 
-	return err
+	if err != nil {
+		return fmt.Errorf("could not execute query: %s", err.Error())
+	}
+
+	return nil
 }
 
 func (r *UserPsql) GetCredentialsByUsername(ctx context.Context, username string) (core.UserCredentials, error) {
@@ -37,9 +43,11 @@ LIMIT 1;
 
 	var cred core.UserCredentials
 	row := r.db.QueryRowContext(ctx, query, username)
-	err := row.Scan(&cred.ID, &cred.Password)
+	if err := row.Scan(&cred.ID, &cred.Password); err != nil {
+		return cred, fmt.Errorf("could not scan row: %s", err.Error())
+	}
 
 	cred.Username = username
 
-	return cred, err
+	return cred, nil
 }

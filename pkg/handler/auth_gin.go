@@ -7,15 +7,18 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/grimerssy/todo-service/internal/core"
 	"github.com/grimerssy/todo-service/pkg/service"
+	"github.com/sirupsen/logrus"
 )
 
 type AuthGin struct {
+	logger      logrus.FieldLogger
 	authService service.AuthService
 	userService service.UserService
 }
 
-func NewAuthGin(authService service.AuthService, userService service.UserService) *AuthGin {
+func NewAuthGin(logger logrus.FieldLogger, authService service.AuthService, userService service.UserService) *AuthGin {
 	return &AuthGin{
+		logger:      logger,
 		authService: authService,
 		userService: userService,
 	}
@@ -26,12 +29,16 @@ func (h *AuthGin) signUp(c *gin.Context) {
 	ctx := context.TODO()
 
 	if err := c.BindJSON(&userReq); err != nil {
-		c.AbortWithStatusJSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
+		message := "could not bind json"
+		h.logger.Errorf("%s: %s", message, err.Error())
+		c.AbortWithStatusJSON(http.StatusBadRequest, map[string]string{"error": message})
 		return
 	}
 
 	if err := h.userService.Create(ctx, userReq); err != nil {
-		c.AbortWithStatusJSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
+		message := "could not create user"
+		h.logger.Errorf(err.Error())
+		c.AbortWithStatusJSON(http.StatusInternalServerError, map[string]string{"error": message})
 		return
 	}
 
@@ -43,13 +50,17 @@ func (h *AuthGin) signIn(c *gin.Context) {
 	ctx := context.TODO()
 
 	if err := c.BindJSON(&userReq); err != nil {
-		c.AbortWithStatusJSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
+		message := "could not bind json"
+		h.logger.Errorf("%s: %s", message, err.Error())
+		c.AbortWithStatusJSON(http.StatusBadRequest, map[string]string{"error": message})
 		return
 	}
 
 	token, err := h.authService.GenerateToken(ctx, userReq)
 	if err != nil {
-		c.AbortWithStatusJSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
+		message := "could not sign in"
+		h.logger.Errorf("%s: %s", message, err.Error())
+		c.AbortWithStatusJSON(http.StatusInternalServerError, map[string]string{"error": message})
 		return
 	}
 

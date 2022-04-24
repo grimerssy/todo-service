@@ -7,6 +7,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/grimerssy/todo-service/pkg/service"
+	"github.com/sirupsen/logrus"
 )
 
 const (
@@ -15,11 +16,13 @@ const (
 )
 
 type MiddlewareGin struct {
+	logger      logrus.FieldLogger
 	authService service.AuthService
 }
 
-func NewMiddlewareGin(authService service.AuthService) *MiddlewareGin {
+func NewMiddlewareGin(logger logrus.FieldLogger, authService service.AuthService) *MiddlewareGin {
 	return &MiddlewareGin{
+		logger:      logger,
 		authService: authService,
 	}
 }
@@ -29,21 +32,27 @@ func (h *MiddlewareGin) authorize(c *gin.Context) {
 	ctx := context.TODO()
 
 	if len(header) == 0 {
-		c.AbortWithStatusJSON(http.StatusUnauthorized, map[string]string{"error": "empty authorization header"})
+		message := "could not authorize: empty authorization header"
+		h.logger.Errorf("%s", message)
+		c.AbortWithStatusJSON(http.StatusUnauthorized, map[string]string{"error": message})
 		return
 	}
 
 	headerParts := strings.Split(header, " ")
 
 	if len(headerParts) != 2 || headerParts[0] != "Bearer" {
-		c.AbortWithStatusJSON(http.StatusUnauthorized, map[string]string{"error": "invalid authorization header"})
+		message := "could not authorize: invalid authorization token"
+		h.logger.Errorf("%s", message)
+		c.AbortWithStatusJSON(http.StatusUnauthorized, map[string]string{"error": message})
 		return
 	}
 
 	token := headerParts[1]
 	userID, err := h.authService.ParseToken(ctx, token)
 	if err != nil {
-		c.AbortWithStatusJSON(http.StatusUnauthorized, map[string]string{"error": err.Error()})
+		message := "could not authorize: internal error"
+		h.logger.Errorf("%s: %s", message, err.Error())
+		c.AbortWithStatusJSON(http.StatusUnauthorized, map[string]string{"error": message})
 		return
 	}
 

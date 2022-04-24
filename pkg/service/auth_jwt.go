@@ -48,7 +48,12 @@ func (s *AuthJWT) GenerateToken(ctx context.Context, userReq core.UserRequest) (
 		userID,
 	})
 
-	return token.SignedString([]byte(s.secretJWT))
+	tokenStr, err := token.SignedString([]byte(s.secretJWT))
+	if err != nil {
+		return "", fmt.Errorf("could not sign jwt token: %s", err.Error())
+	}
+
+	return tokenStr, nil
 }
 
 func (s *AuthJWT) ParseToken(ctx context.Context, tokenStr string) (interface{}, error) {
@@ -60,13 +65,14 @@ func (s *AuthJWT) ParseToken(ctx context.Context, tokenStr string) (interface{},
 		return []byte(s.secretJWT), nil
 	})
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("could not parse jwt token: %s", err.Error())
 	}
 
 	claims, ok := token.Claims.(*claimsJWT)
 
 	if !ok {
-		return nil, errors.New(fmt.Sprintf("token claims are not of type %T", claims))
+		err := errors.New(fmt.Sprintf("token claims are not of type %T", claims))
+		return nil, fmt.Errorf("could not cast token claims: %s", err.Error())
 	}
 
 	return claims.UserId, nil
