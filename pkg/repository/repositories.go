@@ -6,7 +6,7 @@ import (
 	"github.com/grimerssy/todo-service/internal/core"
 )
 
-type Repository struct {
+type Repositories struct {
 	UserRepository
 	TodoRepository
 }

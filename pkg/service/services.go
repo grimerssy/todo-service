@@ -6,13 +6,13 @@ import (
 	"github.com/grimerssy/todo-service/internal/core"
 )
 
-type Service struct {
-	AuthenticationService
+type Services struct {
+	AuthService
 	UserService
 	TodoService
 }
 
-type AuthenticationService interface {
+type AuthService interface {
 	GenerateToken(ctx context.Context, userReq core.UserRequest) (string, error)
 	ParseToken(ctx context.Context, tokenStr string) (interface{}, error)
 }
