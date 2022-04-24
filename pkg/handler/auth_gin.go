@@ -6,9 +6,15 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/grimerssy/todo-service/internal/core"
+	"github.com/grimerssy/todo-service/pkg/service"
 )
 
-func (h *Handler) signUp(c *gin.Context) {
+type AuthGin struct {
+	authService service.AuthService
+	userService service.UserService
+}
+
+func (h *AuthGin) signUp(c *gin.Context) {
 	var userReq core.UserRequest
 	ctx := context.TODO()
 
@@ -17,7 +23,7 @@ func (h *Handler) signUp(c *gin.Context) {
 		return
 	}
 
-	if err := h.services.UserService.Create(ctx, userReq); err != nil {
+	if err := h.userService.Create(ctx, userReq); err != nil {
 		c.AbortWithStatusJSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 		return
 	}
@@ -25,7 +31,7 @@ func (h *Handler) signUp(c *gin.Context) {
 	c.Status(http.StatusCreated)
 }
 
-func (h *Handler) signIn(c *gin.Context) {
+func (h *AuthGin) signIn(c *gin.Context) {
 	var userReq core.UserRequest
 	ctx := context.TODO()
 
@@ -34,7 +40,7 @@ func (h *Handler) signIn(c *gin.Context) {
 		return
 	}
 
-	token, err := h.services.AuthenticationService.GenerateToken(ctx, userReq)
+	token, err := h.authService.GenerateToken(ctx, userReq)
 	if err != nil {
 		c.AbortWithStatusJSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 		return

@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/gin-gonic/gin"
+	"github.com/grimerssy/todo-service/pkg/service"
 )
 
 const (
@@ -13,7 +14,11 @@ const (
 	userIDKey           = "user"
 )
 
-func (h *Handler) authorize(c *gin.Context) {
+type MiddlewareGin struct {
+	authService service.AuthService
+}
+
+func (h *MiddlewareGin) authorize(c *gin.Context) {
 	header := c.GetHeader(authorizationHeader)
 	ctx := context.TODO()
 
@@ -30,7 +35,7 @@ func (h *Handler) authorize(c *gin.Context) {
 	}
 
 	token := headerParts[1]
-	userID, err := h.services.AuthenticationService.ParseToken(ctx, token)
+	userID, err := h.authService.ParseToken(ctx, token)
 	if err != nil {
 		c.AbortWithStatusJSON(http.StatusUnauthorized, map[string]string{"error": err.Error()})
 		return

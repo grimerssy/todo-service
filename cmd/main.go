@@ -8,7 +8,7 @@ import (
 )
 
 func main() {
-	handlers := new(handler.Handler).InitRoutes()
+	handlers := new(handler.HandlersGin).InitRoutes()
 	srv := new(server.Server)
 	if err := srv.Run("8000", handlers); err != nil {
 		log.Fatalf("error occured while running http server: %s", err.Error())
