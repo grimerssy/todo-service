@@ -1,9 +1,9 @@
 logformatting = "Text"
+requestseconds = 10
+shutdownseconds = 5
 
 [server.http]
 port = "8080"
-requestseconds = 10
-shutdownseconds = 5
 
 [postgres]
 username = "todo_service"

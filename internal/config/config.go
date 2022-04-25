@@ -3,6 +3,7 @@ package config
 import (
 	"log"
 	"os"
+	"time"
 
 	"github.com/grimerssy/todo-service/internal/server"
 	"github.com/grimerssy/todo-service/pkg/handler"
@@ -17,12 +18,14 @@ const (
 )
 
 type Config struct {
-	LogFormatting string
-	Server        server.ConfigServer
-	Postgres      repository.ConfigPsql
-	JWT           service.ConfigJWT
-	Hashids       service.ConfigHashids
-	Bcrypt        service.ConfigBcrypt
+	LogFormatting   string
+	RequestSeconds  time.Duration
+	ShutdownSeconds time.Duration
+	Server          server.ConfigServer
+	Postgres        repository.ConfigPsql
+	JWT             service.ConfigJWT
+	Hashids         service.ConfigHashids
+	Bcrypt          service.ConfigBcrypt
 }
 
 func GetLogger(logFormatting, environment string) *logrus.Logger {
@@ -113,10 +116,12 @@ func GetServices(cfg *Config, repositories *repository.Repositories) *service.Se
 	}
 }
 
-func GetGinHandlers(logger logrus.FieldLogger, services *service.Services) *handler.HandlersGin {
-	authGin := handler.NewAuthGin(logger, services.AuthService, services.UserService)
-	middlewareGin := handler.NewMiddlewareGin(logger, services.AuthService)
-	todoGin := handler.NewTodoGin(logger, services.TodoService)
+func GetGinHandlers(cfg *Config, logger logrus.FieldLogger, services *service.Services) *handler.HandlersGin {
+	requestTimeout := cfg.RequestSeconds * time.Second
+
+	authGin := handler.NewAuthGin(logger, services.AuthService, services.UserService, requestTimeout)
+	middlewareGin := handler.NewMiddlewareGin(logger, services.AuthService, requestTimeout)
+	todoGin := handler.NewTodoGin(logger, services.TodoService, requestTimeout)
 
 	return &handler.HandlersGin{
 		Auth:       authGin,

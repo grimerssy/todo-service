@@ -3,6 +3,7 @@ package handler
 import (
 	"context"
 	"net/http"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/grimerssy/todo-service/internal/core"
@@ -11,16 +12,20 @@ import (
 )
 
 type AuthGin struct {
-	logger      logrus.FieldLogger
-	authService service.AuthService
-	userService service.UserService
+	logger         logrus.FieldLogger
+	authService    service.AuthService
+	userService    service.UserService
+	requestTimeout time.Duration
 }
 
-func NewAuthGin(logger logrus.FieldLogger, authService service.AuthService, userService service.UserService) *AuthGin {
+func NewAuthGin(logger logrus.FieldLogger, authService service.AuthService, userService service.UserService,
+	requestTimeout time.Duration) *AuthGin {
+
 	return &AuthGin{
-		logger:      logger,
-		authService: authService,
-		userService: userService,
+		logger:         logger,
+		authService:    authService,
+		userService:    userService,
+		requestTimeout: requestTimeout,
 	}
 }
 

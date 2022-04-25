@@ -4,6 +4,7 @@ import (
 	"context"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/grimerssy/todo-service/pkg/service"
@@ -16,14 +17,18 @@ const (
 )
 
 type MiddlewareGin struct {
-	logger      logrus.FieldLogger
-	authService service.AuthService
+	logger         logrus.FieldLogger
+	authService    service.AuthService
+	requestTimeout time.Duration
 }
 
-func NewMiddlewareGin(logger logrus.FieldLogger, authService service.AuthService) *MiddlewareGin {
+func NewMiddlewareGin(logger logrus.FieldLogger, authService service.AuthService,
+	requestTimeout time.Duration) *MiddlewareGin {
+
 	return &MiddlewareGin{
-		logger:      logger,
-		authService: authService,
+		logger:         logger,
+		authService:    authService,
+		requestTimeout: requestTimeout,
 	}
 }
 

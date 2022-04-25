@@ -6,6 +6,7 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 
 	"github.com/grimerssy/todo-service/internal/config"
 	"github.com/grimerssy/todo-service/internal/server"
@@ -22,21 +23,26 @@ func main() {
 
 	repositories, closeDB := config.GetRepositories(cfg)
 	services := config.GetServices(cfg, repositories)
-	handlers := config.GetGinHandlers(logger, services)
+	handlers := config.GetGinHandlers(cfg, logger, services)
 
-	srv := new(server.Server)
+	srv := server.NewServer(cfg.Server, handlers.InitRoutes())
+
+	quit := make(chan os.Signal, 1)
 
 	go func() {
-		if err := srv.Run(cfg.Server, handlers.InitRoutes()); err != nil && err != http.ErrServerClosed {
+		if err := srv.Run(); err != nil && err != http.ErrServerClosed {
 			logger.Fatalf("an error occured while running http server: %s", err.Error())
 		}
 	}()
 
-	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 	<-quit
 
-	if err := srv.Shutdown(context.TODO(), closeDB); err != nil {
+	shutdownTimeout := cfg.ShutdownSeconds * time.Second
+	shutdownCtx, cancel := context.WithTimeout(context.Background(), shutdownTimeout)
+	defer cancel()
+
+	if err := srv.Shutdown(shutdownCtx, closeDB); err != nil {
 		logger.Fatalf("an error occured while shutting down the server: %s", err.Error())
 	}
 }

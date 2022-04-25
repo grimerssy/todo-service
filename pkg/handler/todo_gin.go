@@ -3,6 +3,7 @@ package handler
 import (
 	"context"
 	"net/http"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/grimerssy/todo-service/internal/core"
@@ -11,14 +12,18 @@ import (
 )
 
 type TodoGin struct {
-	logger      logrus.FieldLogger
-	todoService service.TodoService
+	logger         logrus.FieldLogger
+	todoService    service.TodoService
+	requestTimeout time.Duration
 }
 
-func NewTodoGin(logger logrus.FieldLogger, todoService service.TodoService) *TodoGin {
+func NewTodoGin(logger logrus.FieldLogger, todoService service.TodoService,
+	requestTimeout time.Duration) *TodoGin {
+
 	return &TodoGin{
-		logger:      logger,
-		todoService: todoService,
+		logger:         logger,
+		todoService:    todoService,
+		requestTimeout: requestTimeout,
 	}
 }
 
