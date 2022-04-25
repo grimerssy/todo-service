@@ -1,7 +1,6 @@
 package config
 
 import (
-	"database/sql"
 	"log"
 	"os"
 
@@ -19,7 +18,7 @@ const (
 
 type Config struct {
 	LogFormatting string
-	Http          server.ConfigHttp
+	Server        server.ConfigServer
 	Postgres      repository.ConfigPsql
 	JWT           service.ConfigJWT
 	Hashids       service.ConfigHashids
@@ -73,7 +72,7 @@ func GetConfig(environment string) *Config {
 	return cfg
 }
 
-func GetDbAndRepositories(cfg *Config) (*sql.DB, *repository.Repositories) {
+func GetRepositories(cfg *Config) (*repository.Repositories, func() error) {
 	dbPsql, err := repository.NewDbPsql(cfg.Postgres)
 	if err != nil {
 		log.Fatalf("an error occured while connecting to postgres: %s", err.Error())
@@ -81,10 +80,14 @@ func GetDbAndRepositories(cfg *Config) (*sql.DB, *repository.Repositories) {
 	userRepository := repository.NewUserPsql(dbPsql)
 	todoRepository := repository.NewTodoPsql(dbPsql)
 
-	return dbPsql, &repository.Repositories{
+	closeDB := func() error {
+		return dbPsql.Close()
+	}
+
+	return &repository.Repositories{
 		UserRepository: userRepository,
 		TodoRepository: todoRepository,
-	}
+	}, closeDB
 }
 
 func GetServices(cfg *Config, repositories *repository.Repositories) *service.Services {
