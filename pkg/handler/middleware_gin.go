@@ -34,7 +34,9 @@ func NewMiddlewareGin(logger logrus.FieldLogger, authService service.AuthService
 
 func (h *MiddlewareGin) authorize(c *gin.Context) {
 	header := c.GetHeader(authorizationHeader)
-	ctx := context.TODO()
+
+	ctx, cancel := context.WithTimeout(context.Background(), h.requestTimeout)
+	defer cancel()
 
 	if len(header) == 0 {
 		message := "could not authorize: empty authorization header"

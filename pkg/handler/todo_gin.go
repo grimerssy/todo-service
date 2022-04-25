@@ -28,7 +28,8 @@ func NewTodoGin(logger logrus.FieldLogger, todoService service.TodoService,
 }
 
 func (h *TodoGin) create(c *gin.Context) {
-	ctx := context.TODO()
+	ctx, cancel := context.WithTimeout(context.Background(), h.requestTimeout)
+	defer cancel()
 
 	userID, ok := c.Get(userIDKey)
 	if !ok {
@@ -57,7 +58,8 @@ func (h *TodoGin) create(c *gin.Context) {
 }
 
 func (h *TodoGin) getByID(c *gin.Context) {
-	ctx := context.TODO()
+	ctx, cancel := context.WithTimeout(context.Background(), h.requestTimeout)
+	defer cancel()
 
 	userID, ok := c.Get(userIDKey)
 	if !ok {
@@ -82,7 +84,9 @@ func (h *TodoGin) getByID(c *gin.Context) {
 
 func (h *TodoGin) getPending(c *gin.Context) {
 	const completed = false
-	ctx := context.TODO()
+
+	ctx, cancel := context.WithTimeout(context.Background(), h.requestTimeout)
+	defer cancel()
 
 	userID, ok := c.Get(userIDKey)
 	if !ok {
@@ -104,7 +108,8 @@ func (h *TodoGin) getPending(c *gin.Context) {
 }
 
 func (h *TodoGin) getAll(c *gin.Context) {
-	ctx := context.TODO()
+	ctx, cancel := context.WithTimeout(context.Background(), h.requestTimeout)
+	defer cancel()
 
 	userID, ok := c.Get(userIDKey)
 	if !ok {
@@ -126,7 +131,8 @@ func (h *TodoGin) getAll(c *gin.Context) {
 }
 
 func (h *TodoGin) updateByID(c *gin.Context) {
-	ctx := context.TODO()
+	ctx, cancel := context.WithTimeout(context.Background(), h.requestTimeout)
+	defer cancel()
 
 	userID, ok := c.Get(userIDKey)
 	if !ok {
@@ -157,7 +163,8 @@ func (h *TodoGin) updateByID(c *gin.Context) {
 }
 
 func (h *TodoGin) patchByID(c *gin.Context) {
-	ctx := context.TODO()
+	ctx, cancel := context.WithTimeout(context.Background(), h.requestTimeout)
+	defer cancel()
 
 	userID, ok := c.Get(userIDKey)
 	if !ok {
@@ -188,7 +195,8 @@ func (h *TodoGin) patchByID(c *gin.Context) {
 }
 
 func (h *TodoGin) deleteByID(c *gin.Context) {
-	ctx := context.TODO()
+	ctx, cancel := context.WithTimeout(context.Background(), h.requestTimeout)
+	defer cancel()
 
 	userID, ok := c.Get(userIDKey)
 	if !ok {
@@ -212,7 +220,9 @@ func (h *TodoGin) deleteByID(c *gin.Context) {
 
 func (h *TodoGin) deleteCompleted(c *gin.Context) {
 	const completed = true
-	ctx := context.TODO()
+
+	ctx, cancel := context.WithTimeout(context.Background(), h.requestTimeout)
+	defer cancel()
 
 	userID, ok := c.Get(userIDKey)
 	if !ok {

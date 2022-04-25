@@ -15,17 +15,43 @@ type HashBcrypt struct {
 }
 
 func NewHashBcrypt(cfg ConfigBcrypt) *HashBcrypt {
-	return &HashBcrypt{cost: cfg.Cost}
+	return &HashBcrypt{
+		cost: cfg.Cost,
+	}
 }
 
 func (h *HashBcrypt) Hash(ctx context.Context, password string) (string, error) {
-	hash, err := bcrypt.GenerateFromPassword([]byte(password), h.cost)
+	res := make(chan func() (string, error), 1)
 
-	return string(hash), err
+	go func() {
+		hash, err := bcrypt.GenerateFromPassword([]byte(password), h.cost)
+
+		res <- func() (string, error) {
+			return string(hash), err
+		}
+	}()
+
+	select {
+	case <-ctx.Done():
+		return "", ctx.Err()
+	case f := <-res:
+		return f()
+	}
 }
 
 func (h *HashBcrypt) CompareHashAndPassword(ctx context.Context, hash string, password string) bool {
-	err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
+	res := make(chan bool, 1)
 
-	return err == nil
+	go func() {
+		err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
+
+		res <- err == nil
+	}()
+
+	select {
+	case <-ctx.Done():
+		return false
+	case match := <-res:
+		return match
+	}
 }

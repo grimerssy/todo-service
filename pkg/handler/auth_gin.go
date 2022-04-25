@@ -31,7 +31,9 @@ func NewAuthGin(logger logrus.FieldLogger, authService service.AuthService, user
 
 func (h *AuthGin) signUp(c *gin.Context) {
 	var userReq core.UserRequest
-	ctx := context.TODO()
+
+	ctx, cancel := context.WithTimeout(context.Background(), h.requestTimeout)
+	defer cancel()
 
 	if err := c.BindJSON(&userReq); err != nil {
 		message := "could not bind json"
@@ -52,7 +54,9 @@ func (h *AuthGin) signUp(c *gin.Context) {
 
 func (h *AuthGin) signIn(c *gin.Context) {
 	var userReq core.UserRequest
-	ctx := context.TODO()
+
+	ctx, cancel := context.WithTimeout(context.Background(), h.requestTimeout)
+	defer cancel()
 
 	if err := c.BindJSON(&userReq); err != nil {
 		message := "could not bind json"
