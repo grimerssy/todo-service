@@ -34,7 +34,7 @@ func (h *MiddlewareGin) authorize(c *gin.Context) {
 
 	if len(header) == 0 {
 		err := errors.New("could not authorize: empty authorization header")
-		h.logger.Log(logging.ErrorLevel, err.Error())
+		h.logger.Log(logging.WarnLevel, err.Error())
 		c.AbortWithStatusJSON(http.StatusUnauthorized, map[string]string{"error": err.Error()})
 		return
 	}
@@ -43,7 +43,7 @@ func (h *MiddlewareGin) authorize(c *gin.Context) {
 
 	if len(headerParts) != 2 || headerParts[0] != "Bearer" {
 		err := errors.New("could not authorize: invalid authorization token")
-		h.logger.Log(logging.ErrorLevel, err.Error())
+		h.logger.Log(logging.WarnLevel, err.Error())
 		c.AbortWithStatusJSON(http.StatusUnauthorized, map[string]string{"error": err.Error()})
 		return
 	}
@@ -52,7 +52,7 @@ func (h *MiddlewareGin) authorize(c *gin.Context) {
 	userID, err := h.userService.GetID(ctx, token)
 	if err != nil {
 		message := "could not authorize"
-		h.logger.Logf(logging.ErrorLevel, "%s: %s", message, err.Error())
+		h.logger.Logf(logging.WarnLevel, "%s: %s", message, err.Error())
 		c.AbortWithStatusJSON(http.StatusUnauthorized, map[string]string{"error": message})
 		return
 	}

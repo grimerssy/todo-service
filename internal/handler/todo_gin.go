@@ -41,7 +41,7 @@ func (h *TodoGin) create(c *gin.Context) {
 	var todoReq core.TodoRequest
 	if err := c.BindJSON(&todoReq); err != nil {
 		message := "could not bind json"
-		h.logger.LogFieldsf(logging.ErrorLevel, logging.Fields{
+		h.logger.LogFieldsf(logging.WarnLevel, logging.Fields{
 			"user_id": userID,
 		}, "could not create todo: %s: %s", message, err.Error())
 		c.AbortWithStatusJSON(http.StatusBadRequest, map[string]string{"error": message})
@@ -87,7 +87,7 @@ func (h *TodoGin) getByID(c *gin.Context) {
 		c.JSON(http.StatusOK, todoRes)
 		return
 	case service.ErrTodoNotFound:
-		h.logger.LogFieldsf(logging.ErrorLevel, logging.Fields{
+		h.logger.LogFieldsf(logging.WarnLevel, logging.Fields{
 			"user_id": userID,
 			"todo_id": todoID,
 		}, "could not get todo by id: %s", err.Error())
@@ -178,7 +178,7 @@ func (h *TodoGin) updateByID(c *gin.Context) {
 	var todoReq core.TodoRequest
 	if err := c.BindJSON(&todoReq); err != nil {
 		message := "could not bind json"
-		h.logger.LogFieldsf(logging.ErrorLevel, logging.Fields{
+		h.logger.LogFieldsf(logging.WarnLevel, logging.Fields{
 			"user_id": userID,
 			"todo_id": todoID,
 		}, "could not update todo by id: %s: %s", message, err.Error())
@@ -218,7 +218,7 @@ func (h *TodoGin) patchByID(c *gin.Context) {
 	var todoReq core.TodoRequest
 	if err := c.BindJSON(&todoReq); err != nil {
 		message := "could not bind json"
-		h.logger.LogFieldsf(logging.ErrorLevel, logging.Fields{
+		h.logger.LogFieldsf(logging.WarnLevel, logging.Fields{
 			"user_id": userID,
 			"todo_id": todoID,
 		}, "could not patch todo: %s: %s", message, err.Error())

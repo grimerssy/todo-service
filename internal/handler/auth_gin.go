@@ -32,7 +32,7 @@ func (h *AuthGin) signUp(c *gin.Context) {
 	var userReq core.UserRequest
 	if err := c.BindJSON(&userReq); err != nil {
 		message := "could not bind json"
-		h.logger.Logf(logging.ErrorLevel, "user could not sign up: %s: %s", message, err.Error())
+		h.logger.Logf(logging.WarnLevel, "user could not sign up: %s: %s", message, err.Error())
 		c.AbortWithStatusJSON(http.StatusBadRequest, map[string]string{"error": message})
 		return
 	}
@@ -57,7 +57,7 @@ func (h *AuthGin) signIn(c *gin.Context) {
 	var userReq core.UserRequest
 	if err := c.BindJSON(&userReq); err != nil {
 		message := "could not bind json"
-		h.logger.Logf(logging.ErrorLevel, "user could not sign in: %s: %s", message, err.Error())
+		h.logger.Logf(logging.WarnLevel, "user could not sign in: %s: %s", message, err.Error())
 		c.AbortWithStatusJSON(http.StatusBadRequest, map[string]string{"error": message})
 		return
 	}
@@ -72,7 +72,7 @@ func (h *AuthGin) signIn(c *gin.Context) {
 		return
 
 	case service.ErrUserNotFound:
-		h.logger.LogFieldsf(logging.ErrorLevel, logging.Fields{
+		h.logger.LogFieldsf(logging.WarnLevel, logging.Fields{
 			"username": userReq.Username,
 		}, "user could not sign in: %s", err.Error())
 		c.AbortWithStatusJSON(http.StatusNotFound, map[string]string{"error": err.Error()})
