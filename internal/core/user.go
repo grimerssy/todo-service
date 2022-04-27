@@ -15,12 +15,6 @@ type User struct {
 	UpdatedAt time.Time
 }
 
-type UserCredentials struct {
-	ID       uint
-	Username string
-	Password string
-}
-
 type UserRequest struct {
 	FirstName string `json:"firstName"`
 	LastName  string `json:"lastName"`

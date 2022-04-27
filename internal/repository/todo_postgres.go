@@ -9,17 +9,17 @@ import (
 	"github.com/grimerssy/todo-service/internal/core"
 )
 
-type TodoPsql struct {
+type TodoPostgres struct {
 	db *sql.DB
 }
 
-func NewTodoPsql(db *sql.DB) *TodoPsql {
-	return &TodoPsql{
+func NewTodoPostgres(db *sql.DB) *TodoPostgres {
+	return &TodoPostgres{
 		db: db,
 	}
 }
 
-func (r *TodoPsql) Create(ctx context.Context, userID uint, todo core.Todo) error {
+func (r *TodoPostgres) Create(ctx context.Context, userID uint, todo core.Todo) error {
 	res := make(chan error, 1)
 
 	go func() {
@@ -69,7 +69,7 @@ VALUES ($1, $2);
 	}
 }
 
-func (r *TodoPsql) GetByID(ctx context.Context, userID uint, todoID uint) (core.Todo, error) {
+func (r *TodoPostgres) GetByID(ctx context.Context, userID uint, todoID uint) (core.Todo, error) {
 	res := make(chan func() (core.Todo, error), 1)
 
 	go func() {
@@ -107,7 +107,7 @@ LIMIT 1;
 	}
 }
 
-func (r *TodoPsql) GetByCompletion(ctx context.Context, userID uint, completed bool) ([]core.Todo, error) {
+func (r *TodoPostgres) GetByCompletion(ctx context.Context, userID uint, completed bool) ([]core.Todo, error) {
 	res := make(chan func() ([]core.Todo, error), 1)
 
 	go func() {
@@ -144,7 +144,7 @@ WHERE td.completed = $2
 
 		if err := rows.Err(); err != nil {
 			res <- func() ([]core.Todo, error) {
-				return nil, fmt.Errorf("could not scan rows: %s", err.Error())
+				return nil, fmt.Errorf("could not iterate through rows: %s", err.Error())
 			}
 			return
 		}
@@ -162,7 +162,7 @@ WHERE td.completed = $2
 	}
 }
 
-func (r *TodoPsql) GetAll(ctx context.Context, userID uint) ([]core.Todo, error) {
+func (r *TodoPostgres) GetAll(ctx context.Context, userID uint) ([]core.Todo, error) {
 	res := make(chan func() ([]core.Todo, error), 1)
 
 	go func() {
@@ -216,7 +216,7 @@ ON ut.todo_id = td.id;
 	}
 }
 
-func (r *TodoPsql) UpdateByID(ctx context.Context, userID uint, todoID uint, todo core.Todo) error {
+func (r *TodoPostgres) UpdateByID(ctx context.Context, userID uint, todoID uint, todo core.Todo) error {
 	res := make(chan error, 1)
 
 	go func() {
@@ -248,7 +248,7 @@ WHERE ut.user_id = $4
 	}
 }
 
-func (r *TodoPsql) PatchByID(ctx context.Context, userID uint, todoID uint, todo core.Todo) error {
+func (r *TodoPostgres) PatchByID(ctx context.Context, userID uint, todoID uint, todo core.Todo) error {
 	res := make(chan error, 1)
 
 	go func() {
@@ -300,7 +300,7 @@ WHERE ut.user_id = $%d
 	}
 }
 
-func (r *TodoPsql) DeleteByID(ctx context.Context, userID uint, todoID uint) error {
+func (r *TodoPostgres) DeleteByID(ctx context.Context, userID uint, todoID uint) error {
 	res := make(chan error, 1)
 
 	go func() {
@@ -329,7 +329,7 @@ WHERE ut.user_id = $1
 	}
 }
 
-func (r *TodoPsql) DeleteByCompletion(ctx context.Context, userID uint, completed bool) error {
+func (r *TodoPostgres) DeleteByCompletion(ctx context.Context, userID uint, completed bool) error {
 	res := make(chan error, 1)
 
 	go func() {

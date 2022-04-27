@@ -2,24 +2,25 @@ package service
 
 import (
 	"context"
+	"errors"
 
 	"github.com/grimerssy/todo-service/internal/core"
 )
 
+var (
+	ErrTodoNotFound = errors.New("todo does not exist")
+	ErrUserNotFound = errors.New("user does not exist")
+)
+
 type Services struct {
-	AuthService
 	UserService
 	TodoService
 }
 
-type AuthService interface {
-	GenerateToken(ctx context.Context, userReq core.UserRequest) (string, error)
-	ParseToken(ctx context.Context, tokenStr string) (interface{}, error)
-}
-
 type UserService interface {
-	Create(ctx context.Context, userReq core.UserRequest) error
-	GetUserId(ctx context.Context, userReq core.UserRequest) (interface{}, error)
+	SignUp(ctx context.Context, userReq core.UserRequest) error
+	SignIn(ctx context.Context, userReq core.UserRequest) (string, error)
+	GetID(ctx context.Context, token string) (interface{}, error)
 }
 
 type TodoService interface {
@@ -31,14 +32,4 @@ type TodoService interface {
 	PatchByID(ctx context.Context, userID interface{}, todoID interface{}, todoReq core.TodoRequest) error
 	DeleteByID(ctx context.Context, userID interface{}, todoID interface{}) error
 	DeleteByCompletion(ctx context.Context, userID interface{}, completed bool) error
-}
-
-type Hasher interface {
-	Hash(ctx context.Context, password string) (string, error)
-	CompareHashAndPassword(ctx context.Context, hash string, password string) bool
-}
-
-type Encoder interface {
-	Encode(ctx context.Context, id uint) (interface{}, error)
-	Decode(ctx context.Context, encoded interface{}) (uint, error)
 }

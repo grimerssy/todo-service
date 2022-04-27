@@ -1,4 +1,4 @@
-package service
+package hashing
 
 import (
 	"context"
@@ -18,7 +18,7 @@ func TestHashBcrypt_Hash(t *testing.T) {
 		Cost: cost,
 	}
 
-	h := NewHashBcrypt(cfg)
+	h := NewBcrypt(cfg)
 
 	tests := []struct {
 		name        string
@@ -43,7 +43,7 @@ func TestHashBcrypt_Hash(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
-		hash, err := h.Hash(context.Background(), tt.input)
+		hash, err := h.GenerateHash(context.Background(), tt.input)
 		tt.errAssert(t, err)
 		bytes, err := bcrypt.GenerateFromPassword([]byte(tt.bcryptInput), cfg.Cost)
 		require.NoError(t, err)
@@ -63,9 +63,9 @@ func TestHashBcrypt_CompareHashAndPassword(t *testing.T) {
 		Cost: cost,
 	}
 
-	h := NewHashBcrypt(cfg)
+	h := NewBcrypt(cfg)
 
-	hash, err := h.Hash(context.Background(), password)
+	hash, err := h.GenerateHash(context.Background(), password)
 	require.NoError(t, err)
 
 	tests := []struct {

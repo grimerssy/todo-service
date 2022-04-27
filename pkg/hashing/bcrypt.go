@@ -1,4 +1,4 @@
-package service
+package hashing
 
 import (
 	"context"
@@ -10,17 +10,17 @@ type ConfigBcrypt struct {
 	Cost int
 }
 
-type HashBcrypt struct {
+type Bcrypt struct {
 	cost int
 }
 
-func NewHashBcrypt(cfg ConfigBcrypt) *HashBcrypt {
-	return &HashBcrypt{
+func NewBcrypt(cfg ConfigBcrypt) *Bcrypt {
+	return &Bcrypt{
 		cost: cfg.Cost,
 	}
 }
 
-func (h *HashBcrypt) Hash(ctx context.Context, password string) (string, error) {
+func (h *Bcrypt) GenerateHash(ctx context.Context, password string) (string, error) {
 	res := make(chan func() (string, error), 1)
 
 	go func() {
@@ -39,7 +39,7 @@ func (h *HashBcrypt) Hash(ctx context.Context, password string) (string, error) 
 	}
 }
 
-func (h *HashBcrypt) CompareHashAndPassword(ctx context.Context, hash string, password string) bool {
+func (h *Bcrypt) CompareHashAndPassword(ctx context.Context, hash string, password string) bool {
 	res := make(chan bool, 1)
 
 	go func() {

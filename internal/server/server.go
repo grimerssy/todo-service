@@ -3,22 +3,24 @@ package server
 import (
 	"context"
 	"net/http"
+	"time"
 )
 
 type ConfigServer struct {
-	Http ConfigHttp
-}
-
-type ConfigHttp struct {
-	Port string
+	ShutdownSeconds time.Duration
+	Http            struct {
+		Port string
+	}
 }
 
 type Server struct {
-	httpServer *http.Server
+	shutdownTimeout time.Duration
+	httpServer      *http.Server
 }
 
 func NewServer(cfg ConfigServer, handler http.Handler) *Server {
 	return &Server{
+		shutdownTimeout: cfg.ShutdownSeconds * time.Second,
 		httpServer: &http.Server{
 			Addr:    ":" + cfg.Http.Port,
 			Handler: handler,
@@ -30,7 +32,10 @@ func (s *Server) Run() error {
 	return s.httpServer.ListenAndServe()
 }
 
-func (s *Server) Shutdown(ctx context.Context, onShutdown ...func() error) error {
+func (s *Server) Shutdown(onShutdown ...func() error) error {
+	ctx, cancel := context.WithTimeout(context.Background(), s.shutdownTimeout)
+	defer cancel()
+
 	res := make(chan error, 1)
 
 	go func() {

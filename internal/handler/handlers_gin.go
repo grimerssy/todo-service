@@ -1,8 +1,20 @@
 package handler
 
 import (
+	"time"
+
 	"github.com/gin-gonic/gin"
 )
+
+const (
+	authorizationHeader = "Authorization"
+	userIDKey           = "user_id"
+	todoIDKey           = "todo_id"
+)
+
+type ConfigGin struct {
+	RequestSeconds time.Duration
+}
 
 type HandlersGin struct {
 	Auth       *AuthGin
@@ -24,12 +36,12 @@ func (h *HandlersGin) InitRoutes() *gin.Engine {
 		todos := api.Group("/todos")
 		{
 			todos.POST("/", h.Todo.create)
-			todos.GET("/:id", h.Todo.getByID)
+			todos.GET("/:"+todoIDKey, h.Todo.getByID)
 			todos.GET("/pending", h.Todo.getPending)
 			todos.GET("/", h.Todo.getAll)
-			todos.PUT("/:id", h.Todo.updateByID)
-			todos.PATCH("/:id", h.Todo.patchByID)
-			todos.DELETE("/:id", h.Todo.deleteByID)
+			todos.PUT("/:"+todoIDKey, h.Todo.updateByID)
+			todos.PATCH("/:"+todoIDKey, h.Todo.patchByID)
+			todos.DELETE("/:"+todoIDKey, h.Todo.deleteByID)
 			todos.DELETE("/completed", h.Todo.deleteCompleted)
 		}
 	}

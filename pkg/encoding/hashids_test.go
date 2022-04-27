@@ -1,4 +1,4 @@
-package service
+package encoding
 
 import (
 	"context"
@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestEncoderHashids_Encode(t *testing.T) {
+func TestHashids_Encode(t *testing.T) {
 	const (
 		id     = 1
 		salt   = "salt"
@@ -21,10 +21,10 @@ func TestEncoderHashids_Encode(t *testing.T) {
 		HashLength: length,
 	}
 
-	enc, err := NewEncoderHashids(cfg, TodoKey)
+	enc, err := NewHashids(cfg, TodoKey)
 	require.NoError(t, err)
 
-	hash, err := enc.Encode(context.Background(), id)
+	hash, err := enc.EncodeID(context.Background(), id)
 	require.NoError(t, err)
 
 	tests := []struct {
@@ -50,13 +50,13 @@ func TestEncoderHashids_Encode(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
-		got, err := enc.Encode(context.Background(), tt.input)
+		got, err := enc.EncodeID(context.Background(), tt.input)
 		tt.compare(t, tt.want, got)
 		tt.errAsser(t, err)
 	}
 }
 
-func TestEncoderHashids_Decode(t *testing.T) {
+func TestHashids_Decode(t *testing.T) {
 	const (
 		id     = 1
 		salt   = "salt"
@@ -69,10 +69,10 @@ func TestEncoderHashids_Decode(t *testing.T) {
 		HashLength: length,
 	}
 
-	enc, err := NewEncoderHashids(cfg, TodoKey)
+	enc, err := NewHashids(cfg, TodoKey)
 	require.NoError(t, err)
 
-	hash, err := enc.Encode(context.Background(), id)
+	hash, err := enc.EncodeID(context.Background(), id)
 	require.NoError(t, err)
 
 	tests := []struct {
@@ -105,7 +105,7 @@ func TestEncoderHashids_Decode(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
-		got, err := enc.Decode(context.Background(), tt.input)
+		got, err := enc.DecodeID(context.Background(), tt.input)
 		tt.compare(t, tt.want, got)
 		tt.errAssert(t, err)
 	}

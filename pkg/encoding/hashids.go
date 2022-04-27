@@ -1,4 +1,4 @@
-package service
+package encoding
 
 import (
 	"context"
@@ -17,22 +17,22 @@ type ConfigHashids struct {
 	HashLength uint
 }
 
-type EncoderHashids struct {
+type Hashids struct {
 	hashID *hashids.HashID
 }
 
-func NewEncoderHashids(cfg ConfigHashids, saltKey string) (*EncoderHashids, error) {
+func NewHashids(cfg ConfigHashids, saltKey string) (*Hashids, error) {
 	data := hashids.NewData()
 	data.MinLength = int(cfg.HashLength)
 	data.Salt = cfg.Salts[saltKey]
 	hID, err := hashids.NewWithData(data)
 
-	return &EncoderHashids{
+	return &Hashids{
 		hashID: hID,
 	}, err
 }
 
-func (e *EncoderHashids) Encode(ctx context.Context, id uint) (interface{}, error) {
+func (e *Hashids) EncodeID(ctx context.Context, id uint) (interface{}, error) {
 	res := make(chan func() (interface{}, error), 1)
 
 	go func() {
@@ -50,14 +50,14 @@ func (e *EncoderHashids) Encode(ctx context.Context, id uint) (interface{}, erro
 	}
 }
 
-func (e *EncoderHashids) Decode(ctx context.Context, encoded interface{}) (uint, error) {
+func (e *Hashids) DecodeID(ctx context.Context, encoded interface{}) (uint, error) {
 	res := make(chan func() (uint, error), 1)
 
 	go func() {
 		hash, ok := encoded.(string)
 		if !ok {
 			res <- func() (uint, error) {
-				return 0, errors.New("given value could be converted to string")
+				return 0, errors.New("given value could not be converted to string")
 			}
 			return
 		}
