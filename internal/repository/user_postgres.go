@@ -8,17 +8,17 @@ import (
 	"github.com/grimerssy/todo-service/internal/core"
 )
 
-type UserPsql struct {
+type UserPostgres struct {
 	db *sql.DB
 }
 
-func NewUserPsql(db *sql.DB) *UserPsql {
-	return &UserPsql{
+func NewUserPostgres(db *sql.DB) *UserPostgres {
+	return &UserPostgres{
 		db: db,
 	}
 }
 
-func (r *UserPsql) Create(ctx context.Context, user core.User) error {
+func (r *UserPostgres) Create(ctx context.Context, user core.User) error {
 	res := make(chan error, 1)
 
 	go func() {
@@ -47,8 +47,8 @@ VALUES ($1, $2, $3, $4, $5);
 	}
 }
 
-func (r *UserPsql) GetCredentialsByUsername(ctx context.Context, username string) (core.UserCredentials, error) {
-	res := make(chan func() (core.UserCredentials, error), 1)
+func (r *UserPostgres) GetCredentialsByUsername(ctx context.Context, username string) (core.User, error) {
+	res := make(chan func() (core.User, error), 1)
 
 	go func() {
 		query := fmt.Sprintf(`
@@ -57,25 +57,25 @@ WHERE username = $1
 LIMIT 1;
 `, usersTable)
 
-		var cred core.UserCredentials
+		var user core.User
 		row := r.db.QueryRowContext(ctx, query, username)
-		if err := row.Scan(&cred.ID, &cred.Password); err != nil {
-			res <- func() (core.UserCredentials, error) {
-				return cred, fmt.Errorf("could not scan row: %s", err.Error())
+		if err := row.Scan(&user.ID, &user.Password); err != nil {
+			res <- func() (core.User, error) {
+				return user, fmt.Errorf("could not scan row: %s", err.Error())
 			}
 			return
 		}
 
-		cred.Username = username
+		user.Username = username
 
-		res <- func() (core.UserCredentials, error) {
-			return cred, nil
+		res <- func() (core.User, error) {
+			return user, nil
 		}
 	}()
 
 	select {
 	case <-ctx.Done():
-		return core.UserCredentials{}, ctx.Err()
+		return core.User{}, ctx.Err()
 	case f := <-res:
 		return f()
 	}

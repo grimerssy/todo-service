@@ -1,17 +1,11 @@
-package repository
+package database
 
 import (
 	"database/sql"
 	"fmt"
 )
 
-const (
-	usersTable      = "users"
-	todosTable      = "todos"
-	usersTodosTable = "users_todos"
-)
-
-type ConfigPsql struct {
+type ConfigPostgres struct {
 	Username string
 	Password string
 	Host     string
@@ -20,7 +14,7 @@ type ConfigPsql struct {
 	SSLMode  string
 }
 
-func NewDbPsql(cfg ConfigPsql) (*sql.DB, error) {
+func NewPostgres(cfg ConfigPostgres) (*sql.DB, error) {
 	db, err := sql.Open("postgres",
 		fmt.Sprintf("postgresql://%s:%s@%s:%s/%s?sslmode=%s",
 			cfg.Username, cfg.Password, cfg.Host, cfg.Port, cfg.DbName, cfg.SSLMode))

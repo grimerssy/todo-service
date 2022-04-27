@@ -6,6 +6,12 @@ import (
 	"github.com/grimerssy/todo-service/internal/core"
 )
 
+const (
+	usersTable      = "users"
+	todosTable      = "todos"
+	usersTodosTable = "users_todos"
+)
+
 type Repositories struct {
 	UserRepository
 	TodoRepository
@@ -13,7 +19,7 @@ type Repositories struct {
 
 type UserRepository interface {
 	Create(ctx context.Context, user core.User) error
-	GetCredentialsByUsername(ctx context.Context, username string) (core.UserCredentials, error)
+	GetCredentialsByUsername(ctx context.Context, username string) (core.User, error)
 }
 
 type TodoRepository interface {

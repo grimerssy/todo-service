@@ -11,7 +11,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestAuthPsql_Create(t *testing.T) {
+func TestUserPostgres_Create(t *testing.T) {
 	const (
 		id        = 1
 		firstName = "fn"
@@ -25,7 +25,7 @@ func TestAuthPsql_Create(t *testing.T) {
 	require.NoError(t, err)
 	defer db.Close()
 
-	r := NewUserPsql(db)
+	r := NewUserPostgres(db)
 
 	tests := []struct {
 		name      string
@@ -75,7 +75,7 @@ func TestAuthPsql_Create(t *testing.T) {
 	}
 }
 
-func TestAuthPsql_GetCredentialsByUsername(t *testing.T) {
+func TestUserPostgres_GetCredentialsByUsername(t *testing.T) {
 	const (
 		id       = 1
 		username = "un"
@@ -87,13 +87,13 @@ func TestAuthPsql_GetCredentialsByUsername(t *testing.T) {
 	require.NoError(t, err)
 	defer db.Close()
 
-	r := NewUserPsql(db)
+	r := NewUserPostgres(db)
 
 	tests := []struct {
 		name      string
 		mock      func(m sqlmock.Sqlmock)
 		username  string
-		want      core.UserCredentials
+		want      core.User
 		errAssert assert.ErrorAssertionFunc
 	}{
 		{
@@ -106,7 +106,7 @@ func TestAuthPsql_GetCredentialsByUsername(t *testing.T) {
 					WillReturnRows(rows)
 			},
 			username: username,
-			want: core.UserCredentials{
+			want: core.User{
 				ID:       id,
 				Username: username,
 				Password: password,
@@ -122,7 +122,7 @@ func TestAuthPsql_GetCredentialsByUsername(t *testing.T) {
 					WillReturnRows(rows)
 			},
 			username:  invalid,
-			want:      core.UserCredentials{},
+			want:      core.User{},
 			errAssert: assert.Error,
 		},
 	}

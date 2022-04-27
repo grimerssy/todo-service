@@ -6,16 +6,17 @@ import (
 	"fmt"
 
 	"github.com/grimerssy/todo-service/internal/core"
-	"github.com/grimerssy/todo-service/pkg/repository"
+	"github.com/grimerssy/todo-service/internal/repository"
+	"github.com/grimerssy/todo-service/pkg/encoding"
 )
 
 type TodoEncoded struct {
-	userEncoder Encoder
-	todoEncoder Encoder
+	userEncoder encoding.Encoder
+	todoEncoder encoding.Encoder
 	repository  repository.TodoRepository
 }
 
-func NewTodoEncoded(userEncoder, todoEncoder Encoder, repository repository.TodoRepository) *TodoEncoded {
+func NewTodoEncoded(userEncoder, todoEncoder encoding.Encoder, repository repository.TodoRepository) *TodoEncoded {
 	return &TodoEncoded{
 		userEncoder: userEncoder,
 		todoEncoder: todoEncoder,
@@ -27,7 +28,7 @@ func (s *TodoEncoded) Create(ctx context.Context, userID interface{}, todoReq co
 	res := make(chan error, 1)
 
 	go func() {
-		uintUserID, err := s.userEncoder.Decode(ctx, userID)
+		uintUserID, err := s.userEncoder.DecodeID(ctx, userID)
 		if err != nil {
 			res <- fmt.Errorf("could not decode user id: %s", err.Error())
 			return
@@ -59,20 +60,18 @@ func (s *TodoEncoded) GetByID(ctx context.Context, userID interface{}, todoID in
 	res := make(chan func() (core.TodoResponse, error), 1)
 
 	go func() {
-		var response core.TodoResponse
-
-		uintUserID, err := s.userEncoder.Decode(ctx, userID)
+		uintUserID, err := s.userEncoder.DecodeID(ctx, userID)
 		if err != nil {
 			res <- func() (core.TodoResponse, error) {
-				return response, fmt.Errorf("could not decode user id: %s", err.Error())
+				return core.TodoResponse{}, fmt.Errorf("could not decode user id: %s", err.Error())
 			}
 			return
 		}
 
-		uintTodoID, err := s.todoEncoder.Decode(ctx, todoID)
+		uintTodoID, err := s.todoEncoder.DecodeID(ctx, todoID)
 		if err != nil {
 			res <- func() (core.TodoResponse, error) {
-				return response, fmt.Errorf("could not decode todo id: %s", err.Error())
+				return core.TodoResponse{}, fmt.Errorf("could not decode todo id: %s", err.Error())
 			}
 			return
 		}
@@ -80,13 +79,13 @@ func (s *TodoEncoded) GetByID(ctx context.Context, userID interface{}, todoID in
 		todo, err := s.repository.GetByID(ctx, uintUserID, uintTodoID)
 		if err != nil {
 			res <- func() (core.TodoResponse, error) {
-				return response, fmt.Errorf("could not get todo: %s", err.Error())
+				return core.TodoResponse{}, ErrTodoNotFound
 			}
 			return
 		}
 
-		response = core.TodoResponse{
-			Id:          todoID,
+		response := core.TodoResponse{
+			ID:          todoID,
 			Title:       todo.Title,
 			Description: todo.Description,
 			Completed:   todo.Completed,
@@ -109,7 +108,7 @@ func (s *TodoEncoded) GetByCompletion(ctx context.Context, userID interface{}, c
 	res := make(chan func() ([]core.TodoResponse, error), 1)
 
 	go func() {
-		uintUserID, err := s.userEncoder.Decode(ctx, userID)
+		uintUserID, err := s.userEncoder.DecodeID(ctx, userID)
 		if err != nil {
 			res <- func() ([]core.TodoResponse, error) {
 				return nil, fmt.Errorf("could not decode user id: %s", err.Error())
@@ -128,7 +127,7 @@ func (s *TodoEncoded) GetByCompletion(ctx context.Context, userID interface{}, c
 		responses := make([]core.TodoResponse, len(todos))
 
 		for i, todo := range todos {
-			todoID, err := s.todoEncoder.Encode(ctx, todo.ID)
+			todoID, err := s.todoEncoder.EncodeID(ctx, todo.ID)
 			if err != nil {
 				res <- func() ([]core.TodoResponse, error) {
 					return nil, fmt.Errorf("could not encode todo id: %s", err.Error())
@@ -137,7 +136,7 @@ func (s *TodoEncoded) GetByCompletion(ctx context.Context, userID interface{}, c
 			}
 
 			responses[i] = core.TodoResponse{
-				Id:          todoID,
+				ID:          todoID,
 				Title:       todo.Title,
 				Description: todo.Description,
 				Completed:   todo.Completed,
@@ -161,7 +160,7 @@ func (s *TodoEncoded) GetAll(ctx context.Context, userID interface{}) ([]core.To
 	res := make(chan func() ([]core.TodoResponse, error), 1)
 
 	go func() {
-		uintUserID, err := s.userEncoder.Decode(ctx, userID)
+		uintUserID, err := s.userEncoder.DecodeID(ctx, userID)
 		if err != nil {
 			res <- func() ([]core.TodoResponse, error) {
 				return nil, fmt.Errorf("could not decode user id: %s", err.Error())
@@ -180,7 +179,7 @@ func (s *TodoEncoded) GetAll(ctx context.Context, userID interface{}) ([]core.To
 		responses := make([]core.TodoResponse, len(todos))
 
 		for i, todo := range todos {
-			todoID, err := s.todoEncoder.Encode(ctx, todo.ID)
+			todoID, err := s.todoEncoder.EncodeID(ctx, todo.ID)
 			if err != nil {
 				res <- func() ([]core.TodoResponse, error) {
 					return nil, fmt.Errorf("could not encode todo id: %s", err.Error())
@@ -189,7 +188,7 @@ func (s *TodoEncoded) GetAll(ctx context.Context, userID interface{}) ([]core.To
 			}
 
 			responses[i] = core.TodoResponse{
-				Id:          todoID,
+				ID:          todoID,
 				Title:       todo.Title,
 				Description: todo.Description,
 				Completed:   todo.Completed,
@@ -213,7 +212,7 @@ func (s *TodoEncoded) UpdateByID(ctx context.Context, userID interface{}, todoID
 	res := make(chan error, 1)
 
 	go func() {
-		uintUserID, err := s.userEncoder.Decode(ctx, userID)
+		uintUserID, err := s.userEncoder.DecodeID(ctx, userID)
 		if err != nil {
 			res <- fmt.Errorf("could not decode user id: %s", err.Error())
 			return
@@ -225,7 +224,7 @@ func (s *TodoEncoded) UpdateByID(ctx context.Context, userID interface{}, todoID
 			return
 		}
 
-		uintTodoID, err := s.todoEncoder.Decode(ctx, todoID)
+		uintTodoID, err := s.todoEncoder.DecodeID(ctx, todoID)
 		if err != nil {
 			res <- fmt.Errorf("could not decode todo id: %s", err.Error())
 			return
@@ -251,7 +250,7 @@ func (s *TodoEncoded) PatchByID(ctx context.Context, userID interface{}, todoID 
 	res := make(chan error, 1)
 
 	go func() {
-		uintUserID, err := s.userEncoder.Decode(ctx, userID)
+		uintUserID, err := s.userEncoder.DecodeID(ctx, userID)
 		if err != nil {
 			res <- fmt.Errorf("could not decode user id: %s", err.Error())
 			return
@@ -263,7 +262,7 @@ func (s *TodoEncoded) PatchByID(ctx context.Context, userID interface{}, todoID 
 			Completed:   todoReq.Completed,
 		}
 
-		uintTodoID, err := s.todoEncoder.Decode(ctx, todoID)
+		uintTodoID, err := s.todoEncoder.DecodeID(ctx, todoID)
 		if err != nil {
 			res <- fmt.Errorf("could not decode todo id: %s", err.Error())
 			return
@@ -289,13 +288,13 @@ func (s *TodoEncoded) DeleteByID(ctx context.Context, userID interface{}, todoID
 	res := make(chan error, 1)
 
 	go func() {
-		uintUserID, err := s.userEncoder.Decode(ctx, userID)
+		uintUserID, err := s.userEncoder.DecodeID(ctx, userID)
 		if err != nil {
 			res <- fmt.Errorf("could not decode user id: %s", err.Error())
 			return
 		}
 
-		uintTodoID, err := s.todoEncoder.Decode(ctx, todoID)
+		uintTodoID, err := s.todoEncoder.DecodeID(ctx, todoID)
 		if err != nil {
 			res <- fmt.Errorf("could not decode todo id: %s", err.Error())
 			return
@@ -321,7 +320,7 @@ func (s *TodoEncoded) DeleteByCompletion(ctx context.Context, userID interface{}
 	res := make(chan error, 1)
 
 	go func() {
-		uintUserID, err := s.userEncoder.Decode(ctx, userID)
+		uintUserID, err := s.userEncoder.DecodeID(ctx, userID)
 		if err != nil {
 			res <- fmt.Errorf("could not decode user id: %s", err.Error())
 			return

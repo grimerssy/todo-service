@@ -1,15 +1,15 @@
 package main
 
 import (
-	"context"
 	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
-	"time"
 
 	"github.com/grimerssy/todo-service/internal/config"
 	"github.com/grimerssy/todo-service/internal/server"
+	"github.com/grimerssy/todo-service/internal/wiring"
+	"github.com/grimerssy/todo-service/pkg/logging"
 	_ "github.com/lib/pq"
 )
 
@@ -18,12 +18,12 @@ const (
 )
 
 func main() {
-	cfg := config.GetConfig(environment)
-	logger := config.GetLogger(cfg.LogFormatting, environment)
+	cfg := config.NewConfig(environment, logging.DefaultLogrus())
+	logger := logging.NewLogrus(cfg.Logrus)
 
-	repositories, closeDB := config.GetRepositories(cfg)
-	services := config.GetServices(cfg, repositories)
-	handlers := config.GetGinHandlers(cfg, logger, services)
+	repositories, closeDB := wiring.GetRepositories(cfg, logger)
+	services := wiring.GetServices(cfg, logger, repositories)
+	handlers := wiring.GetGinHandlers(cfg, logger, services)
 
 	srv := server.NewServer(cfg.Server, handlers.InitRoutes())
 
@@ -31,18 +31,16 @@ func main() {
 
 	go func() {
 		if err := srv.Run(); err != nil && err != http.ErrServerClosed {
-			logger.Fatalf("an error occured while running http server: %s", err.Error())
+			logger.Logf(logging.FatalLevel, "could not run the server: %s", err.Error())
 		}
 	}()
+	logger.Log(logging.InfoLevel, "starting the server")
 
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 	<-quit
 
-	shutdownTimeout := cfg.ShutdownSeconds * time.Second
-	shutdownCtx, cancel := context.WithTimeout(context.Background(), shutdownTimeout)
-	defer cancel()
-
-	if err := srv.Shutdown(shutdownCtx, closeDB); err != nil {
-		logger.Fatalf("an error occured while shutting down the server: %s", err.Error())
+	logger.Log(logging.InfoLevel, "shutting the server down")
+	if err := srv.Shutdown(closeDB); err != nil {
+		logger.Logf(logging.FatalLevel, "could not shutdown the server: %s", err.Error())
 	}
 }
