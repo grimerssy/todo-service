@@ -5,7 +5,7 @@ import (
 )
 
 type ConfigLFU struct {
-	capacity int
+	Capacity int
 }
 
 type LFU struct {
@@ -35,7 +35,7 @@ type item struct {
 
 func NewLFU(cfg ConfigLFU) *LFU {
 	cache := &LFU{
-		capacity: cfg.capacity,
+		capacity: cfg.Capacity,
 		hashmap:  make(map[interface{}]*item),
 		last:     nil,
 	}
@@ -44,7 +44,7 @@ func NewLFU(cfg ConfigLFU) *LFU {
 
 	if cache.capacity < 1 {
 		cache.setFunc = func(_, _ interface{}) {}
-		cache.getFunc = func(_ interface{}) interface{} { return -1 }
+		cache.getFunc = func(_ interface{}) interface{} { return nil }
 	}
 
 	return cache
@@ -83,7 +83,7 @@ func (c *LFU) getValue(key interface{}) interface{} {
 	found, ok := c.hashmap[key]
 
 	if !ok {
-		return -1
+		return nil
 	}
 
 	c.updateItem(found)

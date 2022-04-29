@@ -14,7 +14,7 @@ func TestLFU(t *testing.T) {
 	}{
 		{
 			cfg: ConfigLFU{
-				capacity: 0,
+				Capacity: 0,
 			},
 			testCase: func(c *LFU) []interface{} {
 				var results []interface{}
@@ -25,12 +25,12 @@ func TestLFU(t *testing.T) {
 				return results
 			},
 			want: []interface{}{
-				-1,
+				nil,
 			},
 		},
 		{
 			cfg: ConfigLFU{
-				capacity: 3,
+				Capacity: 3,
 			},
 			testCase: func(c *LFU) []interface{} {
 				var results []interface{}
@@ -50,12 +50,12 @@ func TestLFU(t *testing.T) {
 				return results
 			},
 			want: []interface{}{
-				2, 1, 2, -1, 2, 1, 4,
+				2, 1, 2, nil, 2, 1, 4,
 			},
 		},
 		{
 			cfg: ConfigLFU{
-				capacity: 2,
+				Capacity: 2,
 			},
 			testCase: func(c *LFU) []interface{} {
 				var results []interface{}
@@ -74,7 +74,7 @@ func TestLFU(t *testing.T) {
 				return results
 			},
 			want: []interface{}{
-				1, -1, 3, -1, 3, 4,
+				1, nil, 3, nil, 3, 4,
 			},
 		},
 	}

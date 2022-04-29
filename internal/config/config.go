@@ -6,6 +6,7 @@ import (
 	"github.com/grimerssy/todo-service/internal/handler"
 	"github.com/grimerssy/todo-service/internal/server"
 	"github.com/grimerssy/todo-service/pkg/auth"
+	"github.com/grimerssy/todo-service/pkg/cache"
 	"github.com/grimerssy/todo-service/pkg/database"
 	"github.com/grimerssy/todo-service/pkg/encoding"
 	"github.com/grimerssy/todo-service/pkg/hashing"
@@ -21,6 +22,7 @@ type Config struct {
 	Gin      handler.ConfigGin
 	Server   server.ConfigServer
 	Postgres database.ConfigPostgres
+	LFU      cache.ConfigLFU
 	JWT      auth.ConfigJWT
 	Hashids  encoding.ConfigHashids
 	Bcrypt   hashing.ConfigBcrypt

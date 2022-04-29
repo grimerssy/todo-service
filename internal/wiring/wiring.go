@@ -6,6 +6,7 @@ import (
 	"github.com/grimerssy/todo-service/internal/repository"
 	"github.com/grimerssy/todo-service/internal/service"
 	"github.com/grimerssy/todo-service/pkg/auth"
+	"github.com/grimerssy/todo-service/pkg/cache"
 	"github.com/grimerssy/todo-service/pkg/database"
 	"github.com/grimerssy/todo-service/pkg/encoding"
 	"github.com/grimerssy/todo-service/pkg/hashing"
@@ -31,6 +32,8 @@ func GetRepositories(cfg *config.Config, logger logging.Logger) (*repository.Rep
 }
 
 func GetServices(cfg *config.Config, logger logging.Logger, repositories *repository.Repositories) *service.Services {
+	todoCache := cache.NewLFU(cfg.LFU)
+
 	hash := hashing.NewBcrypt(cfg.Bcrypt)
 
 	userEncoder, err := encoding.NewHashids(cfg.Hashids, encoding.UserKey)
@@ -45,7 +48,7 @@ func GetServices(cfg *config.Config, logger logging.Logger, repositories *reposi
 	authenticator := auth.NewJWT(cfg.JWT)
 
 	userService := service.NewUserEncoded(hash, userEncoder, authenticator, repositories.UserRepository)
-	todoService := service.NewTodoEncoded(userEncoder, todoEncoder, repositories.TodoRepository)
+	todoService := service.NewTodoEncoded(todoCache, userEncoder, todoEncoder, repositories.TodoRepository)
 
 	return &service.Services{
 		UserService: userService,
