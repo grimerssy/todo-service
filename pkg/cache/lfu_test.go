@@ -85,6 +85,57 @@ func TestLFU(t *testing.T) {
 				1, nil, 3, nil, 3, 4,
 			},
 		},
+		{
+			cfg: ConfigLFU{
+				Capacities: map[cfgKey]int{
+					key: 1,
+				},
+			},
+			testCase: func(c *LFU) []interface{} {
+				var results []interface{}
+
+				c.SetValue(1, 1)
+				c.SetValue(2, 2)
+				c.SetValue(3, 3)
+				results = append(results, c.GetValue(3))
+				results = append(results, c.GetValue(1))
+				results = append(results, c.GetValue(2))
+				c.RemoveValue(3)
+				results = append(results, c.GetValue(3))
+
+				return results
+			},
+			want: []interface{}{
+				3, nil, nil, nil,
+			},
+		},
+		{
+			cfg: ConfigLFU{
+				Capacities: map[cfgKey]int{
+					key: 3,
+				},
+			},
+			testCase: func(c *LFU) []interface{} {
+				var results []interface{}
+
+				c.SetValue(1, 1)
+				c.SetValue(2, 2)
+				c.SetValue(3, 3)
+				c.SetValue(4, 4)
+				c.SetValue(5, 5)
+				results = append(results, c.GetValue(3))
+				results = append(results, c.GetValue(1))
+				results = append(results, c.GetValue(4))
+				c.RemoveValue(4)
+				results = append(results, c.GetValue(4))
+				results = append(results, c.GetValue(3))
+
+				return results
+			},
+			want: []interface{}{
+				3, nil, 4, nil, 3,
+			},
+		},
 	}
 	for _, tt := range tests {
 		c := NewLFU(tt.cfg, key)
