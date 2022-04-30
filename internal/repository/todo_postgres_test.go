@@ -224,7 +224,7 @@ func TestTodoPostgres_GetByCompletion(t *testing.T) {
 			},
 			userID:    0,
 			input:     completed,
-			want:      []core.Todo{},
+			want:      nil,
 			errAssert: assert.NoError,
 		},
 		{
@@ -238,7 +238,7 @@ func TestTodoPostgres_GetByCompletion(t *testing.T) {
 			},
 			userID:    id,
 			input:     completed,
-			want:      []core.Todo{},
+			want:      nil,
 			errAssert: assert.NoError,
 		},
 	}
@@ -306,7 +306,7 @@ func TestTodoPostgres_GetAll(t *testing.T) {
 					WillReturnRows(rows)
 			},
 			userID:    0,
-			want:      []core.Todo{},
+			want:      nil,
 			errAssert: assert.NoError,
 		},
 		{
@@ -319,7 +319,7 @@ func TestTodoPostgres_GetAll(t *testing.T) {
 					WillReturnRows(rows)
 			},
 			userID:    id,
-			want:      []core.Todo{},
+			want:      nil,
 			errAssert: assert.NoError,
 		},
 	}
@@ -352,14 +352,17 @@ func TestTodoPostgres_UpdateByID(t *testing.T) {
 		userID    uint
 		todoID    uint
 		input     core.Todo
+		want      uint
 		errAssert assert.ErrorAssertionFunc
 	}{
 		{
 			name: "ok",
 			mock: func(m sqlmock.Sqlmock) {
-				m.ExpectExec("UPDATE "+todosTable).
+				rows := sqlmock.NewRows([]string{"id"}).
+					AddRow(id)
+				m.ExpectQuery("UPDATE "+todosTable).
 					WithArgs(title, description, completed, id, id).
-					WillReturnResult(sqlmock.NewResult(id, 1))
+					WillReturnRows(rows)
 			},
 			userID: id,
 			todoID: id,
@@ -368,14 +371,16 @@ func TestTodoPostgres_UpdateByID(t *testing.T) {
 				Description: description,
 				Completed:   completed,
 			},
+			want:      id,
 			errAssert: assert.NoError,
 		},
 		{
 			name: "no user",
 			mock: func(m sqlmock.Sqlmock) {
-				m.ExpectExec("UPDATE "+todosTable).
+				rows := sqlmock.NewRows([]string{"id"})
+				m.ExpectQuery("UPDATE "+todosTable).
 					WithArgs(title, description, completed, 0, id).
-					WillReturnResult(sqlmock.NewResult(0, 0))
+					WillReturnRows(rows)
 			},
 			userID: 0,
 			todoID: id,
@@ -384,14 +389,16 @@ func TestTodoPostgres_UpdateByID(t *testing.T) {
 				Description: description,
 				Completed:   completed,
 			},
-			errAssert: assert.NoError,
+			want:      0,
+			errAssert: assert.Error,
 		},
 		{
 			name: "no todo",
 			mock: func(m sqlmock.Sqlmock) {
-				m.ExpectExec("UPDATE "+todosTable).
+				rows := sqlmock.NewRows([]string{"id"})
+				m.ExpectQuery("UPDATE "+todosTable).
 					WithArgs(title, description, completed, id, 0).
-					WillReturnResult(sqlmock.NewResult(0, 0))
+					WillReturnRows(rows)
 			},
 			userID: id,
 			todoID: 0,
@@ -400,13 +407,15 @@ func TestTodoPostgres_UpdateByID(t *testing.T) {
 				Description: description,
 				Completed:   completed,
 			},
-			errAssert: assert.NoError,
+			want:      0,
+			errAssert: assert.Error,
 		},
 	}
 	for _, tt := range tests {
 		tt.mock(mock)
-		err := r.UpdateByID(context.Background(), tt.userID, tt.todoID, tt.input)
+		got, err := r.UpdateByID(context.Background(), tt.userID, tt.todoID, tt.input)
 		tt.errAssert(t, err)
+		assert.Equal(t, tt.want, got)
 		assert.NoError(t, mock.ExpectationsWereMet())
 	}
 }
@@ -431,14 +440,17 @@ func TestTodoPostgres_PatchID(t *testing.T) {
 		userID    uint
 		todoID    uint
 		input     core.Todo
+		want      uint
 		errAssert assert.ErrorAssertionFunc
 	}{
 		{
 			name: "ok all fields",
 			mock: func(m sqlmock.Sqlmock) {
-				m.ExpectExec("UPDATE "+todosTable).
+				rows := sqlmock.NewRows([]string{"id"}).
+					AddRow(id)
+				m.ExpectQuery("UPDATE "+todosTable).
 					WithArgs(title, description, completed, id, id).
-					WillReturnResult(sqlmock.NewResult(id, 1))
+					WillReturnRows(rows)
 			},
 			userID: id,
 			todoID: id,
@@ -447,14 +459,17 @@ func TestTodoPostgres_PatchID(t *testing.T) {
 				Description: description,
 				Completed:   completed,
 			},
+			want:      id,
 			errAssert: assert.NoError,
 		},
 		{
 			name: "ok no title",
 			mock: func(m sqlmock.Sqlmock) {
-				m.ExpectExec("UPDATE "+todosTable).
+				rows := sqlmock.NewRows([]string{"id"}).
+					AddRow(id)
+				m.ExpectQuery("UPDATE "+todosTable).
 					WithArgs(description, completed, id, id).
-					WillReturnResult(sqlmock.NewResult(id, 1))
+					WillReturnRows(rows)
 			},
 			userID: id,
 			todoID: id,
@@ -462,14 +477,17 @@ func TestTodoPostgres_PatchID(t *testing.T) {
 				Description: description,
 				Completed:   completed,
 			},
+			want:      id,
 			errAssert: assert.NoError,
 		},
 		{
 			name: "ok no description",
 			mock: func(m sqlmock.Sqlmock) {
-				m.ExpectExec("UPDATE "+todosTable).
+				rows := sqlmock.NewRows([]string{"id"}).
+					AddRow(id)
+				m.ExpectQuery("UPDATE "+todosTable).
 					WithArgs(title, completed, id, id).
-					WillReturnResult(sqlmock.NewResult(id, 1))
+					WillReturnRows(rows)
 			},
 			userID: id,
 			todoID: id,
@@ -477,14 +495,17 @@ func TestTodoPostgres_PatchID(t *testing.T) {
 				Title:     title,
 				Completed: completed,
 			},
+			want:      id,
 			errAssert: assert.NoError,
 		},
 		{
 			name: "ok no completed",
 			mock: func(m sqlmock.Sqlmock) {
-				m.ExpectExec("UPDATE "+todosTable).
+				rows := sqlmock.NewRows([]string{"id"}).
+					AddRow(id)
+				m.ExpectQuery("UPDATE "+todosTable).
 					WithArgs(title, description, false, id, id).
-					WillReturnResult(sqlmock.NewResult(id, 1))
+					WillReturnRows(rows)
 			},
 			userID: id,
 			todoID: id,
@@ -492,68 +513,82 @@ func TestTodoPostgres_PatchID(t *testing.T) {
 				Title:       title,
 				Description: description,
 			},
+			want:      id,
 			errAssert: assert.NoError,
 		},
 		{
 			name: "ok only title",
 			mock: func(m sqlmock.Sqlmock) {
-				m.ExpectExec("UPDATE "+todosTable).
+				rows := sqlmock.NewRows([]string{"id"}).
+					AddRow(id)
+				m.ExpectQuery("UPDATE "+todosTable).
 					WithArgs(title, false, id, id).
-					WillReturnResult(sqlmock.NewResult(id, 1))
+					WillReturnRows(rows)
 			},
 			userID: id,
 			todoID: id,
 			input: core.Todo{
 				Title: title,
 			},
+			want:      id,
 			errAssert: assert.NoError,
 		},
 		{
 			name: "ok only description",
 			mock: func(m sqlmock.Sqlmock) {
-				m.ExpectExec("UPDATE "+todosTable).
+				rows := sqlmock.NewRows([]string{"id"}).
+					AddRow(id)
+				m.ExpectQuery("UPDATE "+todosTable).
 					WithArgs(description, false, id, id).
-					WillReturnResult(sqlmock.NewResult(id, 1))
+					WillReturnRows(rows)
 			},
 			userID: id,
 			todoID: id,
 			input: core.Todo{
 				Description: description,
 			},
+			want:      id,
 			errAssert: assert.NoError,
 		},
 		{
 			name: "ok only completed",
 			mock: func(m sqlmock.Sqlmock) {
-				m.ExpectExec("UPDATE "+todosTable).
+				rows := sqlmock.NewRows([]string{"id"}).
+					AddRow(id)
+				m.ExpectQuery("UPDATE "+todosTable).
 					WithArgs(completed, id, id).
-					WillReturnResult(sqlmock.NewResult(id, 1))
+					WillReturnRows(rows)
 			},
 			userID: id,
 			todoID: id,
 			input: core.Todo{
 				Completed: completed,
 			},
+			want:      id,
 			errAssert: assert.NoError,
 		},
 		{
 			name: "ok empty",
 			mock: func(m sqlmock.Sqlmock) {
-				m.ExpectExec("UPDATE "+todosTable).
+				rows := sqlmock.NewRows([]string{"id"}).
+					AddRow(id)
+				m.ExpectQuery("UPDATE "+todosTable).
 					WithArgs(false, id, id).
-					WillReturnResult(sqlmock.NewResult(id, 1))
+					WillReturnRows(rows)
 			},
 			userID:    id,
 			todoID:    id,
 			input:     core.Todo{},
+			want:      id,
 			errAssert: assert.NoError,
 		},
 		{
 			name: "no user",
 			mock: func(m sqlmock.Sqlmock) {
-				m.ExpectExec("UPDATE "+todosTable).
+				rows := sqlmock.NewRows([]string{"id"})
+				m.ExpectQuery("UPDATE "+todosTable).
 					WithArgs(title, description, completed, 0, id).
-					WillReturnResult(sqlmock.NewResult(0, 0))
+					WillReturnRows(rows)
 			},
 			userID: 0,
 			todoID: id,
@@ -562,14 +597,16 @@ func TestTodoPostgres_PatchID(t *testing.T) {
 				Description: description,
 				Completed:   completed,
 			},
-			errAssert: assert.NoError,
+			want:      0,
+			errAssert: assert.Error,
 		},
 		{
 			name: "no todo",
 			mock: func(m sqlmock.Sqlmock) {
-				m.ExpectExec("UPDATE "+todosTable).
+				rows := sqlmock.NewRows([]string{"id"})
+				m.ExpectQuery("UPDATE "+todosTable).
 					WithArgs(title, description, completed, id, 0).
-					WillReturnResult(sqlmock.NewResult(0, 0))
+					WillReturnRows(rows)
 			},
 			userID: id,
 			todoID: 0,
@@ -578,13 +615,15 @@ func TestTodoPostgres_PatchID(t *testing.T) {
 				Description: description,
 				Completed:   completed,
 			},
-			errAssert: assert.NoError,
+			want:      0,
+			errAssert: assert.Error,
 		},
 	}
 	for _, tt := range tests {
 		tt.mock(mock)
-		err := r.PatchByID(context.Background(), tt.userID, tt.todoID, tt.input)
+		got, err := r.PatchByID(context.Background(), tt.userID, tt.todoID, tt.input)
 		tt.errAssert(t, err)
+		assert.Equal(t, tt.want, got)
 		assert.NoError(t, mock.ExpectationsWereMet())
 	}
 }
@@ -603,46 +642,55 @@ func TestTodoPostgres_DeleteByID(t *testing.T) {
 		mock      func(m sqlmock.Sqlmock)
 		userID    uint
 		todoID    uint
+		want      uint
 		errAssert assert.ErrorAssertionFunc
 	}{
 		{
 			name: "ok",
 			mock: func(m sqlmock.Sqlmock) {
-				m.ExpectExec("DELETE FROM "+todosTable).
+				rows := sqlmock.NewRows([]string{"id"}).
+					AddRow(id)
+				m.ExpectQuery("DELETE FROM "+todosTable).
 					WithArgs(id, id).
-					WillReturnResult(sqlmock.NewResult(id, 1))
+					WillReturnRows(rows)
 			},
 			userID:    id,
 			todoID:    id,
+			want:      id,
 			errAssert: assert.NoError,
 		},
 		{
 			name: "no user",
 			mock: func(m sqlmock.Sqlmock) {
-				m.ExpectExec("DELETE FROM "+todosTable).
+				rows := sqlmock.NewRows([]string{"id"})
+				m.ExpectQuery("DELETE FROM "+todosTable).
 					WithArgs(0, id).
-					WillReturnResult(sqlmock.NewResult(0, 0))
+					WillReturnRows(rows)
 			},
 			userID:    0,
 			todoID:    id,
-			errAssert: assert.NoError,
+			want:      0,
+			errAssert: assert.Error,
 		},
 		{
 			name: "no todo",
 			mock: func(m sqlmock.Sqlmock) {
-				m.ExpectExec("DELETE FROM "+todosTable).
+				rows := sqlmock.NewRows([]string{"id"})
+				m.ExpectQuery("DELETE FROM "+todosTable).
 					WithArgs(id, 0).
-					WillReturnResult(sqlmock.NewResult(0, 0))
+					WillReturnRows(rows)
 			},
 			userID:    id,
 			todoID:    0,
-			errAssert: assert.NoError,
+			want:      0,
+			errAssert: assert.Error,
 		},
 	}
 	for _, tt := range tests {
 		tt.mock(mock)
-		err := r.DeleteByID(context.Background(), tt.userID, tt.todoID)
+		got, err := r.DeleteByID(context.Background(), tt.userID, tt.todoID)
 		tt.errAssert(t, err)
+		assert.Equal(t, tt.want, got)
 		assert.NoError(t, mock.ExpectationsWereMet())
 	}
 }
@@ -664,46 +712,55 @@ func TestTodoPostgres_DeleteByCompletion(t *testing.T) {
 		mock      func(m sqlmock.Sqlmock)
 		userID    uint
 		input     bool
+		want      []uint
 		errAssert assert.ErrorAssertionFunc
 	}{
 		{
 			name: "ok",
 			mock: func(m sqlmock.Sqlmock) {
-				m.ExpectExec("DELETE FROM "+todosTable).
+				rows := sqlmock.NewRows([]string{"id"}).
+					AddRow(id)
+				m.ExpectQuery("DELETE FROM "+todosTable).
 					WithArgs(id, completed).
-					WillReturnResult(sqlmock.NewResult(id, 1))
+					WillReturnRows(rows)
 			},
 			userID:    id,
 			input:     completed,
+			want:      []uint{id},
 			errAssert: assert.NoError,
 		},
 		{
 			name: "no user",
 			mock: func(m sqlmock.Sqlmock) {
-				m.ExpectExec("DELETE FROM "+todosTable).
+				rows := sqlmock.NewRows([]string{"id"})
+				m.ExpectQuery("DELETE FROM "+todosTable).
 					WithArgs(0, completed).
-					WillReturnResult(sqlmock.NewResult(0, 0))
+					WillReturnRows(rows)
 			},
 			userID:    0,
 			input:     completed,
+			want:      nil,
 			errAssert: assert.NoError,
 		},
 		{
 			name: "no matches",
 			mock: func(m sqlmock.Sqlmock) {
-				m.ExpectExec("DELETE FROM "+todosTable).
+				rows := sqlmock.NewRows([]string{"id"})
+				m.ExpectQuery("DELETE FROM "+todosTable).
 					WithArgs(id, completed).
-					WillReturnResult(sqlmock.NewResult(0, 0))
+					WillReturnRows(rows)
 			},
 			userID:    id,
 			input:     completed,
+			want:      nil,
 			errAssert: assert.NoError,
 		},
 	}
 	for _, tt := range tests {
 		tt.mock(mock)
-		err := r.DeleteByCompletion(context.Background(), tt.userID, tt.input)
+		got, err := r.DeleteByCompletion(context.Background(), tt.userID, tt.input)
 		tt.errAssert(t, err)
+		assert.Equal(t, tt.want, got)
 		assert.NoError(t, mock.ExpectationsWereMet())
 	}
 }

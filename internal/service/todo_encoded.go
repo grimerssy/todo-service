@@ -7,17 +7,22 @@ import (
 
 	"github.com/grimerssy/todo-service/internal/core"
 	"github.com/grimerssy/todo-service/internal/repository"
+	"github.com/grimerssy/todo-service/pkg/cache"
 	"github.com/grimerssy/todo-service/pkg/encoding"
 )
 
 type TodoEncoded struct {
+	cache       cache.Cache
 	userEncoder encoding.Encoder
 	todoEncoder encoding.Encoder
 	repository  repository.TodoRepository
 }
 
-func NewTodoEncoded(userEncoder, todoEncoder encoding.Encoder, repository repository.TodoRepository) *TodoEncoded {
+func NewTodoEncoded(cache cache.Cache, userEncoder, todoEncoder encoding.Encoder,
+	repository repository.TodoRepository) *TodoEncoded {
+
 	return &TodoEncoded{
+		cache:       cache,
 		userEncoder: userEncoder,
 		todoEncoder: todoEncoder,
 		repository:  repository,
@@ -44,6 +49,8 @@ func (s *TodoEncoded) Create(ctx context.Context, userID interface{}, todoReq co
 			res <- fmt.Errorf("could not create todo: %s", err.Error())
 			return
 		}
+
+		s.invalidateUserCache(uintUserID, nil)
 
 		res <- nil
 	}()
@@ -76,6 +83,18 @@ func (s *TodoEncoded) GetByID(ctx context.Context, userID interface{}, todoID in
 			return
 		}
 
+		cacheKey := cache.TodoCacheKey{
+			UserID: uintUserID,
+			Args:   uintTodoID,
+		}
+
+		if cached := s.cache.GetValue(cacheKey); cached != nil {
+			res <- func() (core.TodoResponse, error) {
+				return cached.(core.TodoResponse), nil
+			}
+			return
+		}
+
 		todo, err := s.repository.GetByID(ctx, uintUserID, uintTodoID)
 		if err != nil {
 			res <- func() (core.TodoResponse, error) {
@@ -90,6 +109,8 @@ func (s *TodoEncoded) GetByID(ctx context.Context, userID interface{}, todoID in
 			Description: todo.Description,
 			Completed:   todo.Completed,
 		}
+
+		s.cache.SetValue(cacheKey, response)
 
 		res <- func() (core.TodoResponse, error) {
 			return response, nil
@@ -112,6 +133,18 @@ func (s *TodoEncoded) GetByCompletion(ctx context.Context, userID interface{}, c
 		if err != nil {
 			res <- func() ([]core.TodoResponse, error) {
 				return nil, fmt.Errorf("could not decode user id: %s", err.Error())
+			}
+			return
+		}
+
+		cacheKey := cache.TodoCacheKey{
+			UserID: uintUserID,
+			Args:   completed,
+		}
+
+		if cached := s.cache.GetValue(cacheKey); cached != nil {
+			res <- func() ([]core.TodoResponse, error) {
+				return cached.([]core.TodoResponse), nil
 			}
 			return
 		}
@@ -143,6 +176,8 @@ func (s *TodoEncoded) GetByCompletion(ctx context.Context, userID interface{}, c
 			}
 		}
 
+		s.cache.SetValue(cacheKey, responses)
+
 		res <- func() ([]core.TodoResponse, error) {
 			return responses, nil
 		}
@@ -164,6 +199,18 @@ func (s *TodoEncoded) GetAll(ctx context.Context, userID interface{}) ([]core.To
 		if err != nil {
 			res <- func() ([]core.TodoResponse, error) {
 				return nil, fmt.Errorf("could not decode user id: %s", err.Error())
+			}
+			return
+		}
+
+		cacheKey := cache.TodoCacheKey{
+			UserID: uintUserID,
+			Args:   nil,
+		}
+
+		if cached := s.cache.GetValue(cacheKey); cached != nil {
+			res <- func() ([]core.TodoResponse, error) {
+				return cached.([]core.TodoResponse), nil
 			}
 			return
 		}
@@ -194,6 +241,8 @@ func (s *TodoEncoded) GetAll(ctx context.Context, userID interface{}) ([]core.To
 				Completed:   todo.Completed,
 			}
 		}
+
+		s.cache.SetValue(cacheKey, responses)
 
 		res <- func() ([]core.TodoResponse, error) {
 			return responses, nil
@@ -230,10 +279,13 @@ func (s *TodoEncoded) UpdateByID(ctx context.Context, userID interface{}, todoID
 			return
 		}
 
-		if err := s.repository.UpdateByID(ctx, uintUserID, uintTodoID, todo); err != nil {
+		id, err := s.repository.UpdateByID(ctx, uintUserID, uintTodoID, todo)
+		if err != nil {
 			res <- fmt.Errorf("could not update todo: %s", err.Error())
 			return
 		}
+
+		s.invalidateUserCache(uintUserID, []uint{id})
 
 		res <- nil
 	}()
@@ -268,10 +320,13 @@ func (s *TodoEncoded) PatchByID(ctx context.Context, userID interface{}, todoID 
 			return
 		}
 
-		if err := s.repository.PatchByID(ctx, uintUserID, uintTodoID, todo); err != nil {
+		id, err := s.repository.PatchByID(ctx, uintUserID, uintTodoID, todo)
+		if err != nil {
 			res <- fmt.Errorf("could not patch todo: %s", err.Error())
 			return
 		}
+
+		s.invalidateUserCache(uintUserID, []uint{id})
 
 		res <- nil
 	}()
@@ -300,10 +355,13 @@ func (s *TodoEncoded) DeleteByID(ctx context.Context, userID interface{}, todoID
 			return
 		}
 
-		if err := s.repository.DeleteByID(ctx, uintUserID, uintTodoID); err != nil {
+		id, err := s.repository.DeleteByID(ctx, uintUserID, uintTodoID)
+		if err != nil {
 			res <- fmt.Errorf("could not delete todo: %s", err.Error())
 			return
 		}
+
+		s.invalidateUserCache(uintUserID, []uint{id})
 
 		res <- nil
 	}()
@@ -326,10 +384,13 @@ func (s *TodoEncoded) DeleteByCompletion(ctx context.Context, userID interface{}
 			return
 		}
 
-		if err := s.repository.DeleteByCompletion(ctx, uintUserID, completed); err != nil {
+		ids, err := s.repository.DeleteByCompletion(ctx, uintUserID, completed)
+		if err != nil {
 			res <- fmt.Errorf("could not delete todos: %s", err.Error())
 			return
 		}
+
+		s.invalidateUserCache(uintUserID, ids)
 
 		res <- nil
 	}()
@@ -356,4 +417,32 @@ func (*TodoEncoded) requestToTodo(req core.TodoRequest) (core.Todo, error) {
 	}
 
 	return todo, nil
+}
+
+func (s *TodoEncoded) invalidateUserCache(userID uint, todoIDs []uint) {
+	cacheKeys := []cache.TodoCacheKey{
+		{
+			UserID: userID,
+			Args:   true,
+		},
+		{
+			UserID: userID,
+			Args:   false,
+		},
+		{
+			UserID: userID,
+			Args:   nil,
+		},
+	}
+	for _, todoID := range todoIDs {
+		cacheKey := cache.TodoCacheKey{
+			UserID: userID,
+			Args:   todoID,
+		}
+		cacheKeys = append(cacheKeys, cacheKey)
+	}
+
+	for _, key := range cacheKeys {
+		s.cache.RemoveValue(key)
+	}
 }

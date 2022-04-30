@@ -127,8 +127,7 @@ WHERE td.completed = $2
 			return
 		}
 
-		todos := []core.Todo{}
-
+		var todos []core.Todo
 		for rows.Next() {
 			var todo core.Todo
 			err := rows.Scan(
@@ -156,7 +155,7 @@ WHERE td.completed = $2
 
 	select {
 	case <-ctx.Done():
-		return []core.Todo{}, ctx.Err()
+		return nil, ctx.Err()
 	case f := <-res:
 		return f()
 	}
@@ -181,8 +180,7 @@ ON ut.todo_id = td.id;
 			return
 		}
 
-		todos := []core.Todo{}
-
+		var todos []core.Todo
 		for rows.Next() {
 			var todo core.Todo
 			err := rows.Scan(
@@ -210,14 +208,14 @@ ON ut.todo_id = td.id;
 
 	select {
 	case <-ctx.Done():
-		return []core.Todo{}, ctx.Err()
+		return nil, ctx.Err()
 	case f := <-res:
 		return f()
 	}
 }
 
-func (r *TodoPostgres) UpdateByID(ctx context.Context, userID uint, todoID uint, todo core.Todo) error {
-	res := make(chan error, 1)
+func (r *TodoPostgres) UpdateByID(ctx context.Context, userID uint, todoID uint, todo core.Todo) (uint, error) {
+	res := make(chan func() (uint, error), 1)
 
 	go func() {
 		query := fmt.Sprintf(`
@@ -229,27 +227,33 @@ FROM %s ut
 WHERE ut.user_id = $4
     AND ut.todo_id = td.id
     AND td.id = $5
+RETURNING id;
 `, todosTable, usersTodosTable)
 
-		_, err := r.db.ExecContext(ctx, query, todo.Title, todo.Description, todo.Completed, userID, todoID)
-		if err != nil {
-			res <- fmt.Errorf("could not execute query: %s", err.Error())
+		var id uint
+		row := r.db.QueryRowContext(ctx, query, todo.Title, todo.Description, todo.Completed, userID, todoID)
+		if err := row.Scan(&id); err != nil {
+			res <- func() (uint, error) {
+				return 0, fmt.Errorf("could not scan row: %s", err.Error())
+			}
 			return
 		}
 
-		res <- nil
+		res <- func() (uint, error) {
+			return id, nil
+		}
 	}()
 
 	select {
 	case <-ctx.Done():
-		return ctx.Err()
-	case err := <-res:
-		return err
+		return 0, ctx.Err()
+	case f := <-res:
+		return f()
 	}
 }
 
-func (r *TodoPostgres) PatchByID(ctx context.Context, userID uint, todoID uint, todo core.Todo) error {
-	res := make(chan error, 1)
+func (r *TodoPostgres) PatchByID(ctx context.Context, userID uint, todoID uint, todo core.Todo) (uint, error) {
+	res := make(chan func() (uint, error), 1)
 
 	go func() {
 		setStatements := make([]string, 0)
@@ -279,29 +283,35 @@ FROM %s ut
 WHERE ut.user_id = $%d
     AND ut.todo_id = td.id
     AND td.id = $%d
+RETURNING id;
 `, todosTable, setQuery, usersTodosTable, argID, argID+1)
 
 		args = append(args, userID, todoID)
 
-		_, err := r.db.ExecContext(ctx, query, args...)
-		if err != nil {
-			res <- fmt.Errorf("could not execute query: %s", err.Error())
+		var id uint
+		row := r.db.QueryRowContext(ctx, query, args...)
+		if err := row.Scan(&id); err != nil {
+			res <- func() (uint, error) {
+				return 0, fmt.Errorf("could not scan row: %s", err.Error())
+			}
 			return
 		}
 
-		res <- nil
+		res <- func() (uint, error) {
+			return id, nil
+		}
 	}()
 
 	select {
 	case <-ctx.Done():
-		return ctx.Err()
-	case err := <-res:
-		return err
+		return 0, ctx.Err()
+	case f := <-res:
+		return f()
 	}
 }
 
-func (r *TodoPostgres) DeleteByID(ctx context.Context, userID uint, todoID uint) error {
-	res := make(chan error, 1)
+func (r *TodoPostgres) DeleteByID(ctx context.Context, userID uint, todoID uint) (uint, error) {
+	res := make(chan func() (uint, error), 1)
 
 	go func() {
 		query := fmt.Sprintf(`
@@ -309,28 +319,34 @@ DELETE FROM %s td
 USING %s ut
 WHERE ut.user_id = $1
     AND ut.todo_id = td.id
-    AND td.id = $2;
+    AND td.id = $2
+RETURNING id;
 `, todosTable, usersTodosTable)
 
-		_, err := r.db.ExecContext(ctx, query, userID, todoID)
-		if err != nil {
-			res <- fmt.Errorf("could not execute query: %s", err.Error())
+		var id uint
+		row := r.db.QueryRowContext(ctx, query, userID, todoID)
+		if err := row.Scan(&id); err != nil {
+			res <- func() (uint, error) {
+				return 0, fmt.Errorf("could not scan row: %s", err.Error())
+			}
 			return
 		}
 
-		res <- nil
+		res <- func() (uint, error) {
+			return id, nil
+		}
 	}()
 
 	select {
 	case <-ctx.Done():
-		return ctx.Err()
-	case err := <-res:
-		return err
+		return 0, ctx.Err()
+	case f := <-res:
+		return f()
 	}
 }
 
-func (r *TodoPostgres) DeleteByCompletion(ctx context.Context, userID uint, completed bool) error {
-	res := make(chan error, 1)
+func (r *TodoPostgres) DeleteByCompletion(ctx context.Context, userID uint, completed bool) ([]uint, error) {
+	res := make(chan func() ([]uint, error), 1)
 
 	go func() {
 		query := fmt.Sprintf(`
@@ -338,22 +354,45 @@ DELETE FROM %s td
 USING %s ut
 WHERE ut.user_id = $1
     AND ut.todo_id = td.id
-    AND td.completed = $2;
+    AND td.completed = $2
+RETURNING id;
 `, todosTable, usersTodosTable)
 
-		_, err := r.db.ExecContext(ctx, query, userID, completed)
+		rows, err := r.db.QueryContext(ctx, query, userID, completed)
 		if err != nil {
-			res <- fmt.Errorf("could not execute query: %s", err.Error())
+			res <- func() ([]uint, error) {
+				return nil, fmt.Errorf("could not execute query: %s", err.Error())
+			}
 			return
 		}
 
-		res <- nil
+		var ids []uint
+		for rows.Next() {
+			var id uint
+			if err := rows.Scan(&id); err != nil {
+				res <- func() ([]uint, error) {
+					return nil, fmt.Errorf("could not scan row")
+				}
+			}
+			ids = append(ids, id)
+		}
+
+		if err := rows.Err(); err != nil {
+			res <- func() ([]uint, error) {
+				return nil, fmt.Errorf("could not scan rows: %s", err.Error())
+			}
+			return
+		}
+
+		res <- func() ([]uint, error) {
+			return ids, nil
+		}
 	}()
 
 	select {
 	case <-ctx.Done():
-		return ctx.Err()
-	case err := <-res:
-		return err
+		return nil, ctx.Err()
+	case f := <-res:
+		return f()
 	}
 }

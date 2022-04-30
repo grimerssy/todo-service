@@ -9,12 +9,13 @@ type ConfigLFU struct {
 }
 
 type LFU struct {
-	mu       sync.Mutex
-	capacity int
-	hashmap  map[interface{}]*item
-	last     *item
-	setFunc  func(key, val interface{})
-	getFunc  func(key interface{}) interface{}
+	mu         sync.Mutex
+	capacity   int
+	hashmap    map[interface{}]*item
+	last       *item
+	setFunc    func(key, val interface{})
+	getFunc    func(key interface{}) interface{}
+	removeFunc func(key interface{})
 }
 
 type frequency struct {
@@ -41,10 +42,12 @@ func NewLFU(cfg ConfigLFU) *LFU {
 	}
 	cache.setFunc = cache.setValue
 	cache.getFunc = cache.getValue
+	cache.removeFunc = cache.removeValue
 
 	if cache.capacity < 1 {
 		cache.setFunc = func(_, _ interface{}) {}
 		cache.getFunc = func(_ interface{}) interface{} { return nil }
+		cache.removeFunc = func(_ interface{}) {}
 	}
 
 	return cache
@@ -61,6 +64,12 @@ func (c *LFU) GetValue(key interface{}) interface{} {
 	res := c.getFunc(key)
 	c.mu.Unlock()
 	return res
+}
+
+func (c *LFU) RemoveValue(key interface{}) {
+	c.mu.Lock()
+	c.removeFunc(key)
+	c.mu.Unlock()
 }
 
 func (c *LFU) setValue(key, val interface{}) {
@@ -88,6 +97,13 @@ func (c *LFU) getValue(key interface{}) interface{} {
 
 	c.updateItem(found)
 	return found.val
+}
+
+func (c *LFU) removeValue(key interface{}) {
+	found, ok := c.hashmap[key]
+	if ok {
+		c.deleteItem(found)
+	}
 }
 
 func (c *LFU) addItem(item *item) {
@@ -195,6 +211,22 @@ func (c *LFU) updateItem(item *item) {
 	}
 
 	newF.prev.first.append(item)
+}
+
+func (c *LFU) deleteItem(item *item) {
+	delete(c.hashmap, item.key)
+	freq := item.freq
+	if item == freq.first {
+		freq.first = item.prev
+	}
+	if item == c.last {
+		c.last = item.next
+	}
+	freq.length--
+	if freq.length == 0 {
+		freq.delete()
+	}
+	item.delete()
 }
 
 func (c *LFU) popLast() {
