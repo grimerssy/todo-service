@@ -21,7 +21,7 @@ type JWT struct {
 
 type claimsJWT struct {
 	jwt.StandardClaims
-	UserID interface{}
+	UserID any
 }
 
 func NewJWT(cfg ConfigJWT) *JWT {
@@ -31,7 +31,7 @@ func NewJWT(cfg ConfigJWT) *JWT {
 	}
 }
 
-func (s *JWT) GenerateToken(ctx context.Context, userID interface{}) (string, error) {
+func (s *JWT) GenerateToken(ctx context.Context, userID any) (string, error) {
 	res := make(chan func() (string, error), 1)
 
 	go func() {
@@ -65,11 +65,11 @@ func (s *JWT) GenerateToken(ctx context.Context, userID interface{}) (string, er
 	}
 }
 
-func (s *JWT) ParseToken(ctx context.Context, accessToken string) (interface{}, error) {
-	res := make(chan func() (interface{}, error), 1)
+func (s *JWT) ParseToken(ctx context.Context, accessToken string) (any, error) {
+	res := make(chan func() (any, error), 1)
 
 	go func() {
-		token, err := jwt.ParseWithClaims(accessToken, &claimsJWT{}, func(token *jwt.Token) (interface{}, error) {
+		token, err := jwt.ParseWithClaims(accessToken, &claimsJWT{}, func(token *jwt.Token) (any, error) {
 			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 				return nil, errors.New("invalid signing method")
 			}
@@ -77,7 +77,7 @@ func (s *JWT) ParseToken(ctx context.Context, accessToken string) (interface{}, 
 			return []byte(s.signingString), nil
 		})
 		if err != nil {
-			res <- func() (interface{}, error) {
+			res <- func() (any, error) {
 				return nil, fmt.Errorf("could not parse jwt token: %s", err.Error())
 			}
 			return
@@ -87,13 +87,13 @@ func (s *JWT) ParseToken(ctx context.Context, accessToken string) (interface{}, 
 
 		if !ok {
 			err := errors.New(fmt.Sprintf("token claims are not of type %T", claims))
-			res <- func() (interface{}, error) {
+			res <- func() (any, error) {
 				return nil, fmt.Errorf("could not cast token claims: %s", err.Error())
 			}
 			return
 		}
 
-		res <- func() (interface{}, error) {
+		res <- func() (any, error) {
 			return claims.UserID, nil
 		}
 	}()

@@ -19,7 +19,7 @@ type LFU struct {
 	mu          sync.Mutex
 	capacity    int
 	cleanupSize int
-	hashmap     map[interface{}]*item
+	hashmap     map[any]*item
 	last        *item
 }
 
@@ -39,14 +39,14 @@ func NewLFU(cfg ConfigLFU, cfgKey cfgKey) *LFU {
 	cache := &LFU{
 		capacity:    capacity,
 		cleanupSize: cleanupSize,
-		hashmap:     make(map[interface{}]*item),
+		hashmap:     make(map[any]*item),
 		last:        nil,
 	}
 
 	return cache
 }
 
-func (c *LFU) SetValue(key, val interface{}) {
+func (c *LFU) SetValue(key, val any) {
 	c.mu.Lock()
 
 	found, ok := c.hashmap[key]
@@ -65,7 +65,7 @@ func (c *LFU) SetValue(key, val interface{}) {
 	c.mu.Unlock()
 }
 
-func (c *LFU) GetValue(key interface{}) interface{} {
+func (c *LFU) GetValue(key any) any {
 	c.mu.Lock()
 
 	found, ok := c.hashmap[key]
@@ -80,7 +80,7 @@ func (c *LFU) GetValue(key interface{}) interface{} {
 	return found.val
 }
 
-func (c *LFU) RemoveValue(key interface{}) {
+func (c *LFU) RemoveValue(key any) {
 	c.mu.Lock()
 
 	found, ok := c.hashmap[key]
@@ -100,8 +100,8 @@ type frequency struct {
 }
 
 type item struct {
-	key  interface{}
-	val  interface{}
+	key  any
+	val  any
 	freq *frequency
 	next *item
 	prev *item

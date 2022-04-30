@@ -12,14 +12,14 @@ const (
 	TraceLevel
 )
 
-type Fields map[string]interface{}
+type Fields map[string]any
 
 type Logger interface {
-	Log(level Level, args ...interface{})
-	Logln(level Level, args ...interface{})
-	Logf(level Level, format string, args ...interface{})
+	Log(level Level, args ...any)
+	Logln(level Level, args ...any)
+	Logf(level Level, format string, args ...any)
 
-	LogFields(level Level, fields Fields, args ...interface{})
-	LogFieldsln(level Level, fields Fields, args ...interface{})
-	LogFieldsf(level Level, fields Fields, format string, args ...interface{})
+	LogFields(level Level, fields Fields, args ...any)
+	LogFieldsln(level Level, fields Fields, args ...any)
+	LogFieldsf(level Level, fields Fields, format string, args ...any)
 }

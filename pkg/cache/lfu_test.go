@@ -11,8 +11,8 @@ func TestLFU(t *testing.T) {
 
 	tests := []struct {
 		cfg      ConfigLFU
-		testCase func(c *LFU) []interface{}
-		want     []interface{}
+		testCase func(c *LFU) []any
+		want     []any
 	}{
 		{
 			cfg: ConfigLFU{
@@ -23,8 +23,8 @@ func TestLFU(t *testing.T) {
 					key: 1,
 				},
 			},
-			testCase: func(c *LFU) []interface{} {
-				var results []interface{}
+			testCase: func(c *LFU) []any {
+				var results []any
 
 				c.SetValue(2, 2)
 				c.SetValue(1, 1)
@@ -40,7 +40,7 @@ func TestLFU(t *testing.T) {
 
 				return results
 			},
-			want: []interface{}{
+			want: []any{
 				2, 1, 2, nil, 2, 1, 4,
 			},
 		},
@@ -53,8 +53,8 @@ func TestLFU(t *testing.T) {
 					key: 1,
 				},
 			},
-			testCase: func(c *LFU) []interface{} {
-				var results []interface{}
+			testCase: func(c *LFU) []any {
+				var results []any
 
 				c.SetValue(1, 1)
 				c.SetValue(2, 2)
@@ -69,7 +69,7 @@ func TestLFU(t *testing.T) {
 
 				return results
 			},
-			want: []interface{}{
+			want: []any{
 				1, nil, 3, nil, 3, 4,
 			},
 		},
@@ -82,8 +82,8 @@ func TestLFU(t *testing.T) {
 					key: 1,
 				},
 			},
-			testCase: func(c *LFU) []interface{} {
-				var results []interface{}
+			testCase: func(c *LFU) []any {
+				var results []any
 
 				c.SetValue(1, 1)
 				c.SetValue(2, 2)
@@ -96,7 +96,7 @@ func TestLFU(t *testing.T) {
 
 				return results
 			},
-			want: []interface{}{
+			want: []any{
 				3, nil, nil, nil,
 			},
 		},
@@ -109,8 +109,8 @@ func TestLFU(t *testing.T) {
 					key: 1,
 				},
 			},
-			testCase: func(c *LFU) []interface{} {
-				var results []interface{}
+			testCase: func(c *LFU) []any {
+				var results []any
 
 				c.SetValue(1, 1)
 				c.SetValue(2, 2)
@@ -126,7 +126,7 @@ func TestLFU(t *testing.T) {
 
 				return results
 			},
-			want: []interface{}{
+			want: []any{
 				3, nil, 4, nil, 3,
 			},
 		},
@@ -139,8 +139,8 @@ func TestLFU(t *testing.T) {
 					key: 2,
 				},
 			},
-			testCase: func(c *LFU) []interface{} {
-				var results []interface{}
+			testCase: func(c *LFU) []any {
+				var results []any
 
 				c.SetValue(1, 1)
 				c.SetValue(2, 2)
@@ -159,7 +159,7 @@ func TestLFU(t *testing.T) {
 
 				return results
 			},
-			want: []interface{}{
+			want: []any{
 				2, 1, nil, nil, 3, 4, 3, 5,
 			},
 		},

@@ -20,8 +20,8 @@ type TodoRequest struct {
 }
 
 type TodoResponse struct {
-	ID          interface{} `json:"id"`
-	Title       string      `json:"title"`
-	Description string      `json:"description,omitempty"`
-	Completed   bool        `json:"completed"`
+	ID          any    `json:"id"`
+	Title       string `json:"title"`
+	Description string `json:"description,omitempty"`
+	Completed   bool   `json:"completed"`
 }

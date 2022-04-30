@@ -108,11 +108,11 @@ func (s *UserEncoded) SignIn(ctx context.Context, userReq core.UserRequest) (str
 	}
 }
 
-func (s *UserEncoded) GetID(ctx context.Context, token string) (interface{}, error) {
-	res := make(chan func() (interface{}, error), 1)
+func (s *UserEncoded) GetID(ctx context.Context, token string) (any, error) {
+	res := make(chan func() (any, error), 1)
 
 	go func() {
-		res <- func() (interface{}, error) {
+		res <- func() (any, error) {
 			return s.authenticator.ParseToken(ctx, token)
 		}
 	}()

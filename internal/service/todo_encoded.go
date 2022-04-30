@@ -29,7 +29,7 @@ func NewTodoEncoded(cache cache.Cache, userEncoder, todoEncoder encoding.Encoder
 	}
 }
 
-func (s *TodoEncoded) Create(ctx context.Context, userID interface{}, todoReq core.TodoRequest) error {
+func (s *TodoEncoded) Create(ctx context.Context, userID any, todoReq core.TodoRequest) error {
 	res := make(chan error, 1)
 
 	go func() {
@@ -63,7 +63,7 @@ func (s *TodoEncoded) Create(ctx context.Context, userID interface{}, todoReq co
 	}
 }
 
-func (s *TodoEncoded) GetByID(ctx context.Context, userID interface{}, todoID interface{}) (core.TodoResponse, error) {
+func (s *TodoEncoded) GetByID(ctx context.Context, userID, todoID any) (core.TodoResponse, error) {
 	res := make(chan func() (core.TodoResponse, error), 1)
 
 	go func() {
@@ -125,7 +125,7 @@ func (s *TodoEncoded) GetByID(ctx context.Context, userID interface{}, todoID in
 	}
 }
 
-func (s *TodoEncoded) GetByCompletion(ctx context.Context, userID interface{}, completed bool) ([]core.TodoResponse, error) {
+func (s *TodoEncoded) GetByCompletion(ctx context.Context, userID any, completed bool) ([]core.TodoResponse, error) {
 	res := make(chan func() ([]core.TodoResponse, error), 1)
 
 	go func() {
@@ -191,7 +191,7 @@ func (s *TodoEncoded) GetByCompletion(ctx context.Context, userID interface{}, c
 	}
 }
 
-func (s *TodoEncoded) GetAll(ctx context.Context, userID interface{}) ([]core.TodoResponse, error) {
+func (s *TodoEncoded) GetAll(ctx context.Context, userID any) ([]core.TodoResponse, error) {
 	res := make(chan func() ([]core.TodoResponse, error), 1)
 
 	go func() {
@@ -257,7 +257,7 @@ func (s *TodoEncoded) GetAll(ctx context.Context, userID interface{}) ([]core.To
 	}
 }
 
-func (s *TodoEncoded) UpdateByID(ctx context.Context, userID interface{}, todoID interface{}, todoReq core.TodoRequest) error {
+func (s *TodoEncoded) UpdateByID(ctx context.Context, userID, todoID any, todoReq core.TodoRequest) error {
 	res := make(chan error, 1)
 
 	go func() {
@@ -298,7 +298,7 @@ func (s *TodoEncoded) UpdateByID(ctx context.Context, userID interface{}, todoID
 	}
 }
 
-func (s *TodoEncoded) PatchByID(ctx context.Context, userID interface{}, todoID interface{}, todoReq core.TodoRequest) error {
+func (s *TodoEncoded) PatchByID(ctx context.Context, userID, todoID any, todoReq core.TodoRequest) error {
 	res := make(chan error, 1)
 
 	go func() {
@@ -339,7 +339,7 @@ func (s *TodoEncoded) PatchByID(ctx context.Context, userID interface{}, todoID 
 	}
 }
 
-func (s *TodoEncoded) DeleteByID(ctx context.Context, userID interface{}, todoID interface{}) error {
+func (s *TodoEncoded) DeleteByID(ctx context.Context, userID, todoID any) error {
 	res := make(chan error, 1)
 
 	go func() {
@@ -374,7 +374,7 @@ func (s *TodoEncoded) DeleteByID(ctx context.Context, userID interface{}, todoID
 	}
 }
 
-func (s *TodoEncoded) DeleteByCompletion(ctx context.Context, userID interface{}, completed bool) error {
+func (s *TodoEncoded) DeleteByCompletion(ctx context.Context, userID any, completed bool) error {
 	res := make(chan error, 1)
 
 	go func() {

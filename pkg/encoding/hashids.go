@@ -34,12 +34,12 @@ func NewHashids(cfg ConfigHashids, cfgKey cfgKey) (*Hashids, error) {
 	}, err
 }
 
-func (e *Hashids) EncodeID(ctx context.Context, id uint) (interface{}, error) {
-	res := make(chan func() (interface{}, error), 1)
+func (e *Hashids) EncodeID(ctx context.Context, id uint) (any, error) {
+	res := make(chan func() (any, error), 1)
 
 	go func() {
 		hash, err := e.hashID.EncodeInt64([]int64{int64(id)})
-		res <- func() (interface{}, error) {
+		res <- func() (any, error) {
 			return hash, err
 		}
 	}()
@@ -52,7 +52,7 @@ func (e *Hashids) EncodeID(ctx context.Context, id uint) (interface{}, error) {
 	}
 }
 
-func (e *Hashids) DecodeID(ctx context.Context, encoded interface{}) (uint, error) {
+func (e *Hashids) DecodeID(ctx context.Context, encoded any) (uint, error) {
 	res := make(chan func() (uint, error), 1)
 
 	go func() {

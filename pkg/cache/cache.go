@@ -1,12 +1,12 @@
 package cache
 
 type Cache interface {
-	SetValue(key, val interface{})
-	GetValue(key interface{}) interface{}
-	RemoveValue(key interface{})
+	SetValue(key, val any)
+	GetValue(key any) any
+	RemoveValue(key any)
 }
 
 type TodoCacheKey struct {
 	UserID uint
-	Args   interface{}
+	Args   any
 }

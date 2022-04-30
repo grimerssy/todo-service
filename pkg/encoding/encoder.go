@@ -5,6 +5,6 @@ import (
 )
 
 type Encoder interface {
-	EncodeID(ctx context.Context, id uint) (interface{}, error)
-	DecodeID(ctx context.Context, encoded interface{}) (uint, error)
+	EncodeID(ctx context.Context, id uint) (any, error)
+	DecodeID(ctx context.Context, encoded any) (uint, error)
 }

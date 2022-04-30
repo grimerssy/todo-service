@@ -5,6 +5,6 @@ import (
 )
 
 type Authenticator interface {
-	GenerateToken(ctx context.Context, userID interface{}) (string, error)
-	ParseToken(ctx context.Context, accessToken string) (interface{}, error)
+	GenerateToken(ctx context.Context, userID any) (string, error)
+	ParseToken(ctx context.Context, accessToken string) (any, error)
 }

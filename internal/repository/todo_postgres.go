@@ -257,7 +257,7 @@ func (r *TodoPostgres) PatchByID(ctx context.Context, userID uint, todoID uint, 
 
 	go func() {
 		setStatements := make([]string, 0)
-		args := make([]interface{}, 0)
+		args := make([]any, 0)
 		argID := 1
 
 		if len(todo.Title) != 0 {
