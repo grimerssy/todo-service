@@ -47,8 +47,8 @@ func (e *Hashids) EncodeID(ctx context.Context, id uint) (interface{}, error) {
 	select {
 	case <-ctx.Done():
 		return nil, ctx.Err()
-	case f := <-res:
-		return f()
+	case fn := <-res:
+		return fn()
 	}
 }
 
@@ -88,7 +88,7 @@ func (e *Hashids) DecodeID(ctx context.Context, encoded interface{}) (uint, erro
 	select {
 	case <-ctx.Done():
 		return 0, ctx.Err()
-	case f := <-res:
-		return f()
+	case fn := <-res:
+		return fn()
 	}
 }

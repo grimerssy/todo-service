@@ -120,8 +120,8 @@ func (s *TodoEncoded) GetByID(ctx context.Context, userID interface{}, todoID in
 	select {
 	case <-ctx.Done():
 		return core.TodoResponse{}, ctx.Err()
-	case f := <-res:
-		return f()
+	case fn := <-res:
+		return fn()
 	}
 }
 
@@ -186,8 +186,8 @@ func (s *TodoEncoded) GetByCompletion(ctx context.Context, userID interface{}, c
 	select {
 	case <-ctx.Done():
 		return nil, ctx.Err()
-	case f := <-res:
-		return f()
+	case fn := <-res:
+		return fn()
 	}
 }
 
@@ -252,8 +252,8 @@ func (s *TodoEncoded) GetAll(ctx context.Context, userID interface{}) ([]core.To
 	select {
 	case <-ctx.Done():
 		return nil, ctx.Err()
-	case f := <-res:
-		return f()
+	case fn := <-res:
+		return fn()
 	}
 }
 

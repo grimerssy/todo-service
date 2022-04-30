@@ -34,8 +34,8 @@ func (h *Bcrypt) GenerateHash(ctx context.Context, password string) (string, err
 	select {
 	case <-ctx.Done():
 		return "", ctx.Err()
-	case f := <-res:
-		return f()
+	case fn := <-res:
+		return fn()
 	}
 }
 

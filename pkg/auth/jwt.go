@@ -60,8 +60,8 @@ func (s *JWT) GenerateToken(ctx context.Context, userID interface{}) (string, er
 	select {
 	case <-ctx.Done():
 		return "", ctx.Err()
-	case f := <-res:
-		return f()
+	case fn := <-res:
+		return fn()
 	}
 }
 
@@ -101,7 +101,7 @@ func (s *JWT) ParseToken(ctx context.Context, accessToken string) (interface{}, 
 	select {
 	case <-ctx.Done():
 		return nil, ctx.Err()
-	case f := <-res:
-		return f()
+	case fn := <-res:
+		return fn()
 	}
 }

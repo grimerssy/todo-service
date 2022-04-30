@@ -102,8 +102,8 @@ LIMIT 1;
 	select {
 	case <-ctx.Done():
 		return core.Todo{}, ctx.Err()
-	case f := <-res:
-		return f()
+	case fn := <-res:
+		return fn()
 	}
 }
 
@@ -156,8 +156,8 @@ WHERE td.completed = $2
 	select {
 	case <-ctx.Done():
 		return nil, ctx.Err()
-	case f := <-res:
-		return f()
+	case fn := <-res:
+		return fn()
 	}
 }
 
@@ -209,8 +209,8 @@ ON ut.todo_id = td.id;
 	select {
 	case <-ctx.Done():
 		return nil, ctx.Err()
-	case f := <-res:
-		return f()
+	case fn := <-res:
+		return fn()
 	}
 }
 
@@ -247,8 +247,8 @@ RETURNING id;
 	select {
 	case <-ctx.Done():
 		return 0, ctx.Err()
-	case f := <-res:
-		return f()
+	case fn := <-res:
+		return fn()
 	}
 }
 
@@ -305,8 +305,8 @@ RETURNING id;
 	select {
 	case <-ctx.Done():
 		return 0, ctx.Err()
-	case f := <-res:
-		return f()
+	case fn := <-res:
+		return fn()
 	}
 }
 
@@ -340,8 +340,8 @@ RETURNING id;
 	select {
 	case <-ctx.Done():
 		return 0, ctx.Err()
-	case f := <-res:
-		return f()
+	case fn := <-res:
+		return fn()
 	}
 }
 
@@ -392,7 +392,7 @@ RETURNING id;
 	select {
 	case <-ctx.Done():
 		return nil, ctx.Err()
-	case f := <-res:
-		return f()
+	case fn := <-res:
+		return fn()
 	}
 }

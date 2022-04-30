@@ -76,7 +76,7 @@ LIMIT 1;
 	select {
 	case <-ctx.Done():
 		return core.User{}, ctx.Err()
-	case f := <-res:
-		return f()
+	case fn := <-res:
+		return fn()
 	}
 }
