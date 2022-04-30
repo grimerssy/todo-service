@@ -4,8 +4,14 @@ import (
 	"sync"
 )
 
+type cfgKey string
+
+const (
+	TodoKey cfgKey = "todo"
+)
+
 type ConfigLFU struct {
-	Capacity int
+	Capacities map[cfgKey]int
 }
 
 type LFU struct {
@@ -18,25 +24,9 @@ type LFU struct {
 	removeFunc func(key interface{})
 }
 
-type frequency struct {
-	used   uint
-	length uint
-	first  *item
-	next   *frequency
-	prev   *frequency
-}
-
-type item struct {
-	key  interface{}
-	val  interface{}
-	freq *frequency
-	next *item
-	prev *item
-}
-
-func NewLFU(cfg ConfigLFU) *LFU {
+func NewLFU(cfg ConfigLFU, cfgKey cfgKey) *LFU {
 	cache := &LFU{
-		capacity: cfg.Capacity,
+		capacity: cfg.Capacities[cfgKey],
 		hashmap:  make(map[interface{}]*item),
 		last:     nil,
 	}
@@ -70,6 +60,22 @@ func (c *LFU) RemoveValue(key interface{}) {
 	c.mu.Lock()
 	c.removeFunc(key)
 	c.mu.Unlock()
+}
+
+type frequency struct {
+	used   uint
+	length uint
+	first  *item
+	next   *frequency
+	prev   *frequency
+}
+
+type item struct {
+	key  interface{}
+	val  interface{}
+	freq *frequency
+	next *item
+	prev *item
 }
 
 func (c *LFU) setValue(key, val interface{}) {

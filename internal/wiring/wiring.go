@@ -32,7 +32,7 @@ func GetRepositories(cfg *config.Config, logger logging.Logger) (*repository.Rep
 }
 
 func GetServices(cfg *config.Config, logger logging.Logger, repositories *repository.Repositories) *service.Services {
-	todoCache := cache.NewLFU(cfg.LFU)
+	todoCache := cache.NewLFU(cfg.LFU, cache.TodoKey)
 
 	hash := hashing.NewBcrypt(cfg.Bcrypt)
 

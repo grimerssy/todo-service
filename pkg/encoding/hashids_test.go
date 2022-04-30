@@ -10,15 +10,18 @@ import (
 
 func TestHashids_Encode(t *testing.T) {
 	const (
+		key    = TodoKey
 		id     = 1
 		salt   = "salt"
 		length = 2
 	)
 	cfg := ConfigHashids{
-		Salts: map[string]string{
-			"todo": salt,
+		Salts: map[cfgKey]string{
+			key: salt,
 		},
-		HashLength: length,
+		HashLengths: map[cfgKey]uint{
+			key: length,
+		},
 	}
 
 	enc, err := NewHashids(cfg, TodoKey)
@@ -58,15 +61,18 @@ func TestHashids_Encode(t *testing.T) {
 
 func TestHashids_Decode(t *testing.T) {
 	const (
+		key    = TodoKey
 		id     = 1
 		salt   = "salt"
 		length = 2
 	)
 	cfg := ConfigHashids{
-		Salts: map[string]string{
-			"todo": salt,
+		Salts: map[cfgKey]string{
+			key: salt,
 		},
-		HashLength: length,
+		HashLengths: map[cfgKey]uint{
+			key: length,
+		},
 	}
 
 	enc, err := NewHashids(cfg, TodoKey)

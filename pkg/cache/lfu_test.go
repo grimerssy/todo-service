@@ -7,6 +7,8 @@ import (
 )
 
 func TestLFU(t *testing.T) {
+	const key = TodoKey
+
 	tests := []struct {
 		cfg      ConfigLFU
 		testCase func(c *LFU) []interface{}
@@ -14,7 +16,9 @@ func TestLFU(t *testing.T) {
 	}{
 		{
 			cfg: ConfigLFU{
-				Capacity: 0,
+				Capacities: map[cfgKey]int{
+					key: 0,
+				},
 			},
 			testCase: func(c *LFU) []interface{} {
 				var results []interface{}
@@ -30,7 +34,9 @@ func TestLFU(t *testing.T) {
 		},
 		{
 			cfg: ConfigLFU{
-				Capacity: 3,
+				Capacities: map[cfgKey]int{
+					key: 3,
+				},
 			},
 			testCase: func(c *LFU) []interface{} {
 				var results []interface{}
@@ -55,7 +61,9 @@ func TestLFU(t *testing.T) {
 		},
 		{
 			cfg: ConfigLFU{
-				Capacity: 2,
+				Capacities: map[cfgKey]int{
+					key: 2,
+				},
 			},
 			testCase: func(c *LFU) []interface{} {
 				var results []interface{}
@@ -79,7 +87,7 @@ func TestLFU(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
-		c := NewLFU(tt.cfg)
+		c := NewLFU(tt.cfg, key)
 		got := tt.testCase(c)
 		assert.Equal(t, tt.want, got)
 	}

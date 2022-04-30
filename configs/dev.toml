@@ -15,14 +15,14 @@ dbname = "todo"
 sslmode = "disable"
 
 [lfu]
-capacity = 10
+capacities = { "todo" = 10 }
 
 [jwt]
 tokenminutes = 15
 
 [hashids]
-hashlength = 6
-salts = { "todo" = "stWLM0rFHEbpINHg", "user" = "lVNhX9FzCOAy0rHP"}
+salts = { "user" = "lVNhX9FzCOAy0rHP", "todo" = "stWLM0rFHEbpINHg" }
+hashlengths = { "user" = 6, "todo" = 6 }
 
 [bcrypt]
 cost = 12

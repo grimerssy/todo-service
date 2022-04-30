@@ -7,24 +7,26 @@ import (
 	"github.com/speps/go-hashids"
 )
 
+type cfgKey string
+
 const (
-	UserKey = "user"
-	TodoKey = "todo"
+	UserKey cfgKey = "user"
+	TodoKey cfgKey = "todo"
 )
 
 type ConfigHashids struct {
-	Salts      map[string]string
-	HashLength uint
+	Salts       map[cfgKey]string
+	HashLengths map[cfgKey]uint
 }
 
 type Hashids struct {
 	hashID *hashids.HashID
 }
 
-func NewHashids(cfg ConfigHashids, saltKey string) (*Hashids, error) {
+func NewHashids(cfg ConfigHashids, cfgKey cfgKey) (*Hashids, error) {
 	data := hashids.NewData()
-	data.MinLength = int(cfg.HashLength)
-	data.Salt = cfg.Salts[saltKey]
+	data.MinLength = int(cfg.HashLengths[cfgKey])
+	data.Salt = cfg.Salts[cfgKey]
 	hID, err := hashids.NewWithData(data)
 
 	return &Hashids{
