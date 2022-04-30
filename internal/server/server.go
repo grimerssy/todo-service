@@ -43,8 +43,8 @@ func (s *Server) Shutdown(onShutdown ...func() error) error {
 			res <- err
 		}
 
-		for _, f := range onShutdown {
-			if err := f(); err != nil {
+		for _, fn := range onShutdown {
+			if err := fn(); err != nil {
 				res <- err
 			}
 		}

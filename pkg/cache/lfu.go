@@ -11,33 +11,36 @@ const (
 )
 
 type ConfigLFU struct {
-	Capacities map[cfgKey]int
+	Capacities   map[cfgKey]int
+	CleanupSizes map[cfgKey]int
 }
 
 type LFU struct {
-	mu         sync.Mutex
-	capacity   int
-	hashmap    map[interface{}]*item
-	last       *item
-	setFunc    func(key, val interface{})
-	getFunc    func(key interface{}) interface{}
-	removeFunc func(key interface{})
+	mu          sync.Mutex
+	capacity    int
+	cleanupSize int
+	hashmap     map[interface{}]*item
+	last        *item
 }
 
 func NewLFU(cfg ConfigLFU, cfgKey cfgKey) *LFU {
-	cache := &LFU{
-		capacity: cfg.Capacities[cfgKey],
-		hashmap:  make(map[interface{}]*item),
-		last:     nil,
-	}
-	cache.setFunc = cache.setValue
-	cache.getFunc = cache.getValue
-	cache.removeFunc = cache.removeValue
+	capacity := cfg.Capacities[cfgKey]
+	cleanupSize := cfg.CleanupSizes[cfgKey]
 
-	if cache.capacity < 1 {
-		cache.setFunc = func(_, _ interface{}) {}
-		cache.getFunc = func(_ interface{}) interface{} { return nil }
-		cache.removeFunc = func(_ interface{}) {}
+	switch {
+	case capacity < 1:
+		panic("cache capacity cannot be 0 or less")
+	case cleanupSize < 1:
+		panic("cache cleanup size must be 1 or more")
+	case cleanupSize > capacity:
+		panic("cache cleanup size cannot be bigger than capacity")
+	}
+
+	cache := &LFU{
+		capacity:    capacity,
+		cleanupSize: cleanupSize,
+		hashmap:     make(map[interface{}]*item),
+		last:        nil,
 	}
 
 	return cache
@@ -45,20 +48,46 @@ func NewLFU(cfg ConfigLFU, cfgKey cfgKey) *LFU {
 
 func (c *LFU) SetValue(key, val interface{}) {
 	c.mu.Lock()
-	c.setFunc(key, val)
+
+	found, ok := c.hashmap[key]
+	if ok {
+		found.val = val
+		c.updateItem(found)
+		return
+	}
+
+	item := &item{
+		key: key,
+		val: val,
+	}
+	c.addItem(item)
+
 	c.mu.Unlock()
 }
 
 func (c *LFU) GetValue(key interface{}) interface{} {
 	c.mu.Lock()
-	res := c.getFunc(key)
+
+	found, ok := c.hashmap[key]
+	if !ok {
+		c.mu.Unlock()
+		return nil
+	}
+
+	c.updateItem(found)
+
 	c.mu.Unlock()
-	return res
+	return found.val
 }
 
 func (c *LFU) RemoveValue(key interface{}) {
 	c.mu.Lock()
-	c.removeFunc(key)
+
+	found, ok := c.hashmap[key]
+	if ok {
+		c.deleteItem(found)
+	}
+
 	c.mu.Unlock()
 }
 
@@ -78,45 +107,16 @@ type item struct {
 	prev *item
 }
 
-func (c *LFU) setValue(key, val interface{}) {
-	found, ok := c.hashmap[key]
-
-	if ok {
-		found.val = val
-		c.updateItem(found)
-		return
-	}
-
-	item := &item{
-		key: key,
-		val: val,
-	}
-	c.addItem(item)
-}
-
-func (c *LFU) getValue(key interface{}) interface{} {
-	found, ok := c.hashmap[key]
-
-	if !ok {
-		return nil
-	}
-
-	c.updateItem(found)
-	return found.val
-}
-
-func (c *LFU) removeValue(key interface{}) {
-	found, ok := c.hashmap[key]
-	if ok {
-		c.deleteItem(found)
-	}
-}
-
 func (c *LFU) addItem(item *item) {
 	c.hashmap[item.key] = item
 
 	if len(c.hashmap) > c.capacity {
-		c.popLast()
+		for i := 0; i < c.cleanupSize; i++ {
+			if c.last == nil {
+				break
+			}
+			c.popLast()
+		}
 	}
 
 	if c.last == nil {

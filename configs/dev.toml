@@ -15,7 +15,8 @@ dbname = "todo"
 sslmode = "disable"
 
 [lfu]
-capacities = { "todo" = 10 }
+capacities = { "todo" = 5 }
+cleanupsizes = { "todo" = 1 }
 
 [jwt]
 tokenminutes = 15

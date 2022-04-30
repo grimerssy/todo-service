@@ -17,25 +17,10 @@ func TestLFU(t *testing.T) {
 		{
 			cfg: ConfigLFU{
 				Capacities: map[cfgKey]int{
-					key: 0,
-				},
-			},
-			testCase: func(c *LFU) []interface{} {
-				var results []interface{}
-
-				c.SetValue(0, 0)
-				results = append(results, c.GetValue(0))
-
-				return results
-			},
-			want: []interface{}{
-				nil,
-			},
-		},
-		{
-			cfg: ConfigLFU{
-				Capacities: map[cfgKey]int{
 					key: 3,
+				},
+				CleanupSizes: map[cfgKey]int{
+					key: 1,
 				},
 			},
 			testCase: func(c *LFU) []interface{} {
@@ -64,6 +49,9 @@ func TestLFU(t *testing.T) {
 				Capacities: map[cfgKey]int{
 					key: 2,
 				},
+				CleanupSizes: map[cfgKey]int{
+					key: 1,
+				},
 			},
 			testCase: func(c *LFU) []interface{} {
 				var results []interface{}
@@ -90,6 +78,9 @@ func TestLFU(t *testing.T) {
 				Capacities: map[cfgKey]int{
 					key: 1,
 				},
+				CleanupSizes: map[cfgKey]int{
+					key: 1,
+				},
 			},
 			testCase: func(c *LFU) []interface{} {
 				var results []interface{}
@@ -114,6 +105,9 @@ func TestLFU(t *testing.T) {
 				Capacities: map[cfgKey]int{
 					key: 3,
 				},
+				CleanupSizes: map[cfgKey]int{
+					key: 1,
+				},
 			},
 			testCase: func(c *LFU) []interface{} {
 				var results []interface{}
@@ -134,6 +128,39 @@ func TestLFU(t *testing.T) {
 			},
 			want: []interface{}{
 				3, nil, 4, nil, 3,
+			},
+		},
+		{
+			cfg: ConfigLFU{
+				Capacities: map[cfgKey]int{
+					key: 2,
+				},
+				CleanupSizes: map[cfgKey]int{
+					key: 2,
+				},
+			},
+			testCase: func(c *LFU) []interface{} {
+				var results []interface{}
+
+				c.SetValue(1, 1)
+				c.SetValue(2, 2)
+				results = append(results, c.GetValue(2))
+				results = append(results, c.GetValue(1))
+				c.SetValue(3, 3)
+				results = append(results, c.GetValue(2))
+				results = append(results, c.GetValue(1))
+				results = append(results, c.GetValue(3))
+				c.SetValue(4, 4)
+				results = append(results, c.GetValue(4))
+				results = append(results, c.GetValue(3))
+				c.RemoveValue(3)
+				c.SetValue(5, 5)
+				results = append(results, c.GetValue(5))
+
+				return results
+			},
+			want: []interface{}{
+				2, 1, nil, nil, 3, 4, 3, 5,
 			},
 		},
 	}
