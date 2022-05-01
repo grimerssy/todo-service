@@ -36,26 +36,15 @@ func (s *Server) Shutdown(onShutdown ...func() error) error {
 	ctx, cancel := context.WithTimeout(context.Background(), s.shutdownTimeout)
 	defer cancel()
 
-	res := make(chan error, 1)
-
-	go func() {
-		if err := s.httpServer.Shutdown(ctx); err != nil {
-			res <- err
-		}
-
-		for _, fn := range onShutdown {
-			if err := fn(); err != nil {
-				res <- err
-			}
-		}
-
-		res <- nil
-	}()
-
-	select {
-	case <-ctx.Done():
-		return ctx.Err()
-	case err := <-res:
+	if err := s.httpServer.Shutdown(ctx); err != nil {
 		return err
 	}
+
+	for _, fn := range onShutdown {
+		if err := fn(); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }

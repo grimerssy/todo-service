@@ -1,7 +1,6 @@
 package hashing
 
 import (
-	"context"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -43,7 +42,7 @@ func TestHashBcrypt_Hash(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
-		hash, err := h.GenerateHash(context.Background(), tt.input)
+		hash, err := h.GenerateHash(tt.input)
 		tt.errAssert(t, err)
 		bytes, err := bcrypt.GenerateFromPassword([]byte(tt.bcryptInput), cfg.Cost)
 		require.NoError(t, err)
@@ -65,7 +64,7 @@ func TestHashBcrypt_CompareHashAndPassword(t *testing.T) {
 
 	h := NewBcrypt(cfg)
 
-	hash, err := h.GenerateHash(context.Background(), password)
+	hash, err := h.GenerateHash(password)
 	require.NoError(t, err)
 
 	tests := []struct {
@@ -80,7 +79,7 @@ func TestHashBcrypt_CompareHashAndPassword(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
-		got := h.CompareHashAndPassword(context.Background(), tt.hash, tt.password)
+		got := h.CompareHashAndPassword(tt.hash, tt.password)
 		want := bcrypt.CompareHashAndPassword([]byte(hash), []byte(password)) == nil
 		assert.Equal(t, want, got)
 	}

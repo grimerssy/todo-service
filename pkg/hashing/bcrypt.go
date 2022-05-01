@@ -1,8 +1,6 @@
 package hashing
 
 import (
-	"context"
-
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -20,38 +18,11 @@ func NewBcrypt(cfg ConfigBcrypt) *Bcrypt {
 	}
 }
 
-func (h *Bcrypt) GenerateHash(ctx context.Context, password string) (string, error) {
-	res := make(chan func() (string, error), 1)
-
-	go func() {
-		hash, err := bcrypt.GenerateFromPassword([]byte(password), h.cost)
-
-		res <- func() (string, error) {
-			return string(hash), err
-		}
-	}()
-
-	select {
-	case <-ctx.Done():
-		return "", ctx.Err()
-	case fn := <-res:
-		return fn()
-	}
+func (h *Bcrypt) GenerateHash(password string) (string, error) {
+	hash, err := bcrypt.GenerateFromPassword([]byte(password), h.cost)
+	return string(hash), err
 }
 
-func (h *Bcrypt) CompareHashAndPassword(ctx context.Context, hash string, password string) bool {
-	res := make(chan bool, 1)
-
-	go func() {
-		err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
-
-		res <- err == nil
-	}()
-
-	select {
-	case <-ctx.Done():
-		return false
-	case match := <-res:
-		return match
-	}
+func (h *Bcrypt) CompareHashAndPassword(hash string, password string) bool {
+	return bcrypt.CompareHashAndPassword([]byte(hash), []byte(password)) == nil
 }

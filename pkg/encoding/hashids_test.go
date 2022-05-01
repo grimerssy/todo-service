@@ -1,7 +1,6 @@
 package encoding
 
 import (
-	"context"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -27,7 +26,7 @@ func TestHashids_Encode(t *testing.T) {
 	enc, err := NewHashids(cfg, TodoKey)
 	require.NoError(t, err)
 
-	hash, err := enc.EncodeID(context.Background(), id)
+	hash, err := enc.EncodeID(id)
 	require.NoError(t, err)
 
 	tests := []struct {
@@ -53,7 +52,7 @@ func TestHashids_Encode(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
-		got, err := enc.EncodeID(context.Background(), tt.input)
+		got, err := enc.EncodeID(tt.input)
 		tt.compare(t, tt.want, got)
 		tt.errAsser(t, err)
 	}
@@ -78,7 +77,7 @@ func TestHashids_Decode(t *testing.T) {
 	enc, err := NewHashids(cfg, TodoKey)
 	require.NoError(t, err)
 
-	hash, err := enc.EncodeID(context.Background(), id)
+	hash, err := enc.EncodeID(id)
 	require.NoError(t, err)
 
 	tests := []struct {
@@ -111,7 +110,7 @@ func TestHashids_Decode(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
-		got, err := enc.DecodeID(context.Background(), tt.input)
+		got, err := enc.DecodeID(tt.input)
 		tt.compare(t, tt.want, got)
 		tt.errAssert(t, err)
 	}

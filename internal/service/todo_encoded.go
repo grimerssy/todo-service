@@ -30,377 +30,232 @@ func NewTodoEncoded(cache cache.Cache, userEncoder, todoEncoder encoding.Encoder
 }
 
 func (s *TodoEncoded) Create(ctx context.Context, userID any, todoReq core.TodoRequest) error {
-	res := make(chan error, 1)
-
-	go func() {
-		uintUserID, err := s.userEncoder.DecodeID(ctx, userID)
-		if err != nil {
-			res <- fmt.Errorf("could not decode user id: %s", err.Error())
-			return
-		}
-
-		todo, err := s.requestToTodo(todoReq)
-		if err != nil {
-			res <- fmt.Errorf("could not convert request to todo: %s", err.Error())
-			return
-		}
-
-		if err := s.repository.Create(ctx, uintUserID, todo); err != nil {
-			res <- fmt.Errorf("could not create todo: %s", err.Error())
-			return
-		}
-
-		s.invalidateUserCache(uintUserID, nil)
-
-		res <- nil
-	}()
-
-	select {
-	case <-ctx.Done():
-		return ctx.Err()
-	case err := <-res:
-		return err
+	uintUserID, err := s.userEncoder.DecodeID(userID)
+	if err != nil {
+		return fmt.Errorf("could not decode user id: %s", err.Error())
 	}
+
+	todo, err := s.requestToTodo(todoReq)
+	if err != nil {
+		return fmt.Errorf("could not convert request to todo: %s", err.Error())
+	}
+
+	if err := s.repository.Create(ctx, uintUserID, todo); err != nil {
+		return fmt.Errorf("could not create todo: %s", err.Error())
+	}
+
+	s.invalidateUserCache(uintUserID, nil)
+
+	return nil
 }
 
 func (s *TodoEncoded) GetByID(ctx context.Context, userID, todoID any) (core.TodoResponse, error) {
-	res := make(chan func() (core.TodoResponse, error), 1)
+	uintUserID, err := s.userEncoder.DecodeID(userID)
+	if err != nil {
+		return core.TodoResponse{}, fmt.Errorf("could not decode user id: %s", err.Error())
+	}
 
-	go func() {
-		uintUserID, err := s.userEncoder.DecodeID(ctx, userID)
+	uintTodoID, err := s.todoEncoder.DecodeID(todoID)
+	if err != nil {
+		return core.TodoResponse{}, fmt.Errorf("could not decode todo id: %s", err.Error())
+	}
+
+	cacheKey := cache.TodoCacheKey{
+		UserID: uintUserID,
+		Args:   uintTodoID,
+	}
+
+	if cached := s.cache.GetValue(cacheKey); cached != nil {
+		return cached.(core.TodoResponse), nil
+	}
+
+	todo, err := s.repository.GetByID(ctx, uintUserID, uintTodoID)
+	if err != nil {
+		return core.TodoResponse{}, ErrTodoNotFound
+	}
+
+	response := core.TodoResponse{
+		ID:          todoID,
+		Title:       todo.Title,
+		Description: todo.Description,
+		Completed:   todo.Completed,
+	}
+
+	s.cache.SetValue(cacheKey, response)
+
+	return response, nil
+}
+
+func (s *TodoEncoded) GetByCompletion(ctx context.Context, userID any, completed bool) ([]core.TodoResponse, error) {
+	uintUserID, err := s.userEncoder.DecodeID(userID)
+	if err != nil {
+		return nil, fmt.Errorf("could not decode user id: %s", err.Error())
+	}
+
+	cacheKey := cache.TodoCacheKey{
+		UserID: uintUserID,
+		Args:   completed,
+	}
+
+	if cached := s.cache.GetValue(cacheKey); cached != nil {
+		return cached.([]core.TodoResponse), nil
+	}
+
+	todos, err := s.repository.GetByCompletion(ctx, uintUserID, completed)
+	if err != nil {
+		return nil, fmt.Errorf("could not get todos: %s", err.Error())
+	}
+
+	responses := make([]core.TodoResponse, len(todos))
+
+	for i, todo := range todos {
+		todoID, err := s.todoEncoder.EncodeID(todo.ID)
 		if err != nil {
-			res <- func() (core.TodoResponse, error) {
-				return core.TodoResponse{}, fmt.Errorf("could not decode user id: %s", err.Error())
-			}
-			return
+			return nil, fmt.Errorf("could not encode todo id: %s", err.Error())
 		}
 
-		uintTodoID, err := s.todoEncoder.DecodeID(ctx, todoID)
-		if err != nil {
-			res <- func() (core.TodoResponse, error) {
-				return core.TodoResponse{}, fmt.Errorf("could not decode todo id: %s", err.Error())
-			}
-			return
-		}
-
-		cacheKey := cache.TodoCacheKey{
-			UserID: uintUserID,
-			Args:   uintTodoID,
-		}
-
-		if cached := s.cache.GetValue(cacheKey); cached != nil {
-			res <- func() (core.TodoResponse, error) {
-				return cached.(core.TodoResponse), nil
-			}
-			return
-		}
-
-		todo, err := s.repository.GetByID(ctx, uintUserID, uintTodoID)
-		if err != nil {
-			res <- func() (core.TodoResponse, error) {
-				return core.TodoResponse{}, ErrTodoNotFound
-			}
-			return
-		}
-
-		response := core.TodoResponse{
+		responses[i] = core.TodoResponse{
 			ID:          todoID,
 			Title:       todo.Title,
 			Description: todo.Description,
 			Completed:   todo.Completed,
 		}
-
-		s.cache.SetValue(cacheKey, response)
-
-		res <- func() (core.TodoResponse, error) {
-			return response, nil
-		}
-	}()
-
-	select {
-	case <-ctx.Done():
-		return core.TodoResponse{}, ctx.Err()
-	case fn := <-res:
-		return fn()
 	}
-}
 
-func (s *TodoEncoded) GetByCompletion(ctx context.Context, userID any, completed bool) ([]core.TodoResponse, error) {
-	res := make(chan func() ([]core.TodoResponse, error), 1)
+	s.cache.SetValue(cacheKey, responses)
 
-	go func() {
-		uintUserID, err := s.userEncoder.DecodeID(ctx, userID)
-		if err != nil {
-			res <- func() ([]core.TodoResponse, error) {
-				return nil, fmt.Errorf("could not decode user id: %s", err.Error())
-			}
-			return
-		}
-
-		cacheKey := cache.TodoCacheKey{
-			UserID: uintUserID,
-			Args:   completed,
-		}
-
-		if cached := s.cache.GetValue(cacheKey); cached != nil {
-			res <- func() ([]core.TodoResponse, error) {
-				return cached.([]core.TodoResponse), nil
-			}
-			return
-		}
-
-		todos, err := s.repository.GetByCompletion(ctx, uintUserID, completed)
-		if err != nil {
-			res <- func() ([]core.TodoResponse, error) {
-				return nil, fmt.Errorf("could not get todos: %s", err.Error())
-			}
-			return
-		}
-
-		responses := make([]core.TodoResponse, len(todos))
-
-		for i, todo := range todos {
-			todoID, err := s.todoEncoder.EncodeID(ctx, todo.ID)
-			if err != nil {
-				res <- func() ([]core.TodoResponse, error) {
-					return nil, fmt.Errorf("could not encode todo id: %s", err.Error())
-				}
-				return
-			}
-
-			responses[i] = core.TodoResponse{
-				ID:          todoID,
-				Title:       todo.Title,
-				Description: todo.Description,
-				Completed:   todo.Completed,
-			}
-		}
-
-		s.cache.SetValue(cacheKey, responses)
-
-		res <- func() ([]core.TodoResponse, error) {
-			return responses, nil
-		}
-	}()
-
-	select {
-	case <-ctx.Done():
-		return nil, ctx.Err()
-	case fn := <-res:
-		return fn()
-	}
+	return responses, nil
 }
 
 func (s *TodoEncoded) GetAll(ctx context.Context, userID any) ([]core.TodoResponse, error) {
-	res := make(chan func() ([]core.TodoResponse, error), 1)
-
-	go func() {
-		uintUserID, err := s.userEncoder.DecodeID(ctx, userID)
-		if err != nil {
-			res <- func() ([]core.TodoResponse, error) {
-				return nil, fmt.Errorf("could not decode user id: %s", err.Error())
-			}
-			return
-		}
-
-		cacheKey := cache.TodoCacheKey{
-			UserID: uintUserID,
-			Args:   nil,
-		}
-
-		if cached := s.cache.GetValue(cacheKey); cached != nil {
-			res <- func() ([]core.TodoResponse, error) {
-				return cached.([]core.TodoResponse), nil
-			}
-			return
-		}
-
-		todos, err := s.repository.GetAll(ctx, uintUserID)
-		if err != nil {
-			res <- func() ([]core.TodoResponse, error) {
-				return nil, fmt.Errorf("could not get todos: %s", err.Error())
-			}
-			return
-		}
-
-		responses := make([]core.TodoResponse, len(todos))
-
-		for i, todo := range todos {
-			todoID, err := s.todoEncoder.EncodeID(ctx, todo.ID)
-			if err != nil {
-				res <- func() ([]core.TodoResponse, error) {
-					return nil, fmt.Errorf("could not encode todo id: %s", err.Error())
-				}
-				return
-			}
-
-			responses[i] = core.TodoResponse{
-				ID:          todoID,
-				Title:       todo.Title,
-				Description: todo.Description,
-				Completed:   todo.Completed,
-			}
-		}
-
-		s.cache.SetValue(cacheKey, responses)
-
-		res <- func() ([]core.TodoResponse, error) {
-			return responses, nil
-		}
-	}()
-
-	select {
-	case <-ctx.Done():
-		return nil, ctx.Err()
-	case fn := <-res:
-		return fn()
+	uintUserID, err := s.userEncoder.DecodeID(userID)
+	if err != nil {
+		return nil, fmt.Errorf("could not decode user id: %s", err.Error())
 	}
+
+	cacheKey := cache.TodoCacheKey{
+		UserID: uintUserID,
+		Args:   nil,
+	}
+
+	if cached := s.cache.GetValue(cacheKey); cached != nil {
+		return cached.([]core.TodoResponse), nil
+	}
+
+	todos, err := s.repository.GetAll(ctx, uintUserID)
+	if err != nil {
+		return nil, fmt.Errorf("could not get todos: %s", err.Error())
+	}
+
+	responses := make([]core.TodoResponse, len(todos))
+
+	for i, todo := range todos {
+		todoID, err := s.todoEncoder.EncodeID(todo.ID)
+		if err != nil {
+			return nil, fmt.Errorf("could not encode todo id: %s", err.Error())
+		}
+
+		responses[i] = core.TodoResponse{
+			ID:          todoID,
+			Title:       todo.Title,
+			Description: todo.Description,
+			Completed:   todo.Completed,
+		}
+	}
+
+	s.cache.SetValue(cacheKey, responses)
+
+	return responses, nil
 }
 
 func (s *TodoEncoded) UpdateByID(ctx context.Context, userID, todoID any, todoReq core.TodoRequest) error {
-	res := make(chan error, 1)
-
-	go func() {
-		uintUserID, err := s.userEncoder.DecodeID(ctx, userID)
-		if err != nil {
-			res <- fmt.Errorf("could not decode user id: %s", err.Error())
-			return
-		}
-
-		todo, err := s.requestToTodo(todoReq)
-		if err != nil {
-			res <- fmt.Errorf("could not convert request to todo: %s", err.Error())
-			return
-		}
-
-		uintTodoID, err := s.todoEncoder.DecodeID(ctx, todoID)
-		if err != nil {
-			res <- fmt.Errorf("could not decode todo id: %s", err.Error())
-			return
-		}
-
-		id, err := s.repository.UpdateByID(ctx, uintUserID, uintTodoID, todo)
-		if err != nil {
-			res <- fmt.Errorf("could not update todo: %s", err.Error())
-			return
-		}
-
-		s.invalidateUserCache(uintUserID, []uint{id})
-
-		res <- nil
-	}()
-
-	select {
-	case <-ctx.Done():
-		return ctx.Err()
-	case err := <-res:
-		return err
+	uintUserID, err := s.userEncoder.DecodeID(userID)
+	if err != nil {
+		return fmt.Errorf("could not decode user id: %s", err.Error())
 	}
+
+	todo, err := s.requestToTodo(todoReq)
+	if err != nil {
+		return fmt.Errorf("could not convert request to todo: %s", err.Error())
+	}
+
+	uintTodoID, err := s.todoEncoder.DecodeID(todoID)
+	if err != nil {
+		return fmt.Errorf("could not decode todo id: %s", err.Error())
+	}
+
+	id, err := s.repository.UpdateByID(ctx, uintUserID, uintTodoID, todo)
+	if err != nil {
+		return fmt.Errorf("could not update todo: %s", err.Error())
+	}
+
+	s.invalidateUserCache(uintUserID, []uint{id})
+
+	return nil
 }
 
 func (s *TodoEncoded) PatchByID(ctx context.Context, userID, todoID any, todoReq core.TodoRequest) error {
-	res := make(chan error, 1)
-
-	go func() {
-		uintUserID, err := s.userEncoder.DecodeID(ctx, userID)
-		if err != nil {
-			res <- fmt.Errorf("could not decode user id: %s", err.Error())
-			return
-		}
-
-		todo := core.Todo{
-			Title:       todoReq.Title,
-			Description: todoReq.Description,
-			Completed:   todoReq.Completed,
-		}
-
-		uintTodoID, err := s.todoEncoder.DecodeID(ctx, todoID)
-		if err != nil {
-			res <- fmt.Errorf("could not decode todo id: %s", err.Error())
-			return
-		}
-
-		id, err := s.repository.PatchByID(ctx, uintUserID, uintTodoID, todo)
-		if err != nil {
-			res <- fmt.Errorf("could not patch todo: %s", err.Error())
-			return
-		}
-
-		s.invalidateUserCache(uintUserID, []uint{id})
-
-		res <- nil
-	}()
-
-	select {
-	case <-ctx.Done():
-		return ctx.Err()
-	case err := <-res:
-		return err
+	uintUserID, err := s.userEncoder.DecodeID(userID)
+	if err != nil {
+		return fmt.Errorf("could not decode user id: %s", err.Error())
 	}
+
+	todo := core.Todo{
+		Title:       todoReq.Title,
+		Description: todoReq.Description,
+		Completed:   todoReq.Completed,
+	}
+
+	uintTodoID, err := s.todoEncoder.DecodeID(todoID)
+	if err != nil {
+		return fmt.Errorf("could not decode todo id: %s", err.Error())
+	}
+
+	id, err := s.repository.PatchByID(ctx, uintUserID, uintTodoID, todo)
+	if err != nil {
+		return fmt.Errorf("could not patch todo: %s", err.Error())
+	}
+
+	s.invalidateUserCache(uintUserID, []uint{id})
+
+	return nil
 }
 
 func (s *TodoEncoded) DeleteByID(ctx context.Context, userID, todoID any) error {
-	res := make(chan error, 1)
-
-	go func() {
-		uintUserID, err := s.userEncoder.DecodeID(ctx, userID)
-		if err != nil {
-			res <- fmt.Errorf("could not decode user id: %s", err.Error())
-			return
-		}
-
-		uintTodoID, err := s.todoEncoder.DecodeID(ctx, todoID)
-		if err != nil {
-			res <- fmt.Errorf("could not decode todo id: %s", err.Error())
-			return
-		}
-
-		id, err := s.repository.DeleteByID(ctx, uintUserID, uintTodoID)
-		if err != nil {
-			res <- fmt.Errorf("could not delete todo: %s", err.Error())
-			return
-		}
-
-		s.invalidateUserCache(uintUserID, []uint{id})
-
-		res <- nil
-	}()
-
-	select {
-	case <-ctx.Done():
-		return ctx.Err()
-	case err := <-res:
-		return err
+	uintUserID, err := s.userEncoder.DecodeID(userID)
+	if err != nil {
+		return fmt.Errorf("could not decode user id: %s", err.Error())
 	}
+
+	uintTodoID, err := s.todoEncoder.DecodeID(todoID)
+	if err != nil {
+		return fmt.Errorf("could not decode todo id: %s", err.Error())
+	}
+
+	id, err := s.repository.DeleteByID(ctx, uintUserID, uintTodoID)
+	if err != nil {
+		return fmt.Errorf("could not delete todo: %s", err.Error())
+	}
+
+	s.invalidateUserCache(uintUserID, []uint{id})
+
+	return nil
 }
 
 func (s *TodoEncoded) DeleteByCompletion(ctx context.Context, userID any, completed bool) error {
-	res := make(chan error, 1)
-
-	go func() {
-		uintUserID, err := s.userEncoder.DecodeID(ctx, userID)
-		if err != nil {
-			res <- fmt.Errorf("could not decode user id: %s", err.Error())
-			return
-		}
-
-		ids, err := s.repository.DeleteByCompletion(ctx, uintUserID, completed)
-		if err != nil {
-			res <- fmt.Errorf("could not delete todos: %s", err.Error())
-			return
-		}
-
-		s.invalidateUserCache(uintUserID, ids)
-
-		res <- nil
-	}()
-
-	select {
-	case <-ctx.Done():
-		return ctx.Err()
-	case err := <-res:
-		return err
+	uintUserID, err := s.userEncoder.DecodeID(userID)
+	if err != nil {
+		return fmt.Errorf("could not decode user id: %s", err.Error())
 	}
+
+	ids, err := s.repository.DeleteByCompletion(ctx, uintUserID, completed)
+	if err != nil {
+		return fmt.Errorf("could not delete todos: %s", err.Error())
+	}
+
+	s.invalidateUserCache(uintUserID, ids)
+
+	return nil
 }
 
 func (*TodoEncoded) requestToTodo(req core.TodoRequest) (core.Todo, error) {

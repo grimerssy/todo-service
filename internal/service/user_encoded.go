@@ -31,98 +31,48 @@ func NewUserEncoded(hasher hashing.Hasher, encoder encoding.Encoder, authenticat
 }
 
 func (s *UserEncoded) SignUp(ctx context.Context, userReq core.UserRequest) error {
-	res := make(chan error, 1)
-
-	go func() {
-		user, err := s.requestToUser(userReq)
-		if err != nil {
-			res <- fmt.Errorf("could not convert request to user: %s", err.Error())
-			return
-		}
-
-		if user.Password, err = s.hasher.GenerateHash(ctx, user.Password); err != nil {
-			res <- err
-			return
-		}
-
-		if err := s.repository.Create(ctx, user); err != nil {
-			res <- fmt.Errorf("could not create user: %s", err.Error())
-			return
-		}
-
-		res <- nil
-	}()
-
-	select {
-	case <-ctx.Done():
-		return ctx.Err()
-	case err := <-res:
-		return err
+	user, err := s.requestToUser(userReq)
+	if err != nil {
+		return fmt.Errorf("could not convert request to user: %s", err.Error())
 	}
+
+	if user.Password, err = s.hasher.GenerateHash(user.Password); err != nil {
+		return err
+
+	}
+
+	if err := s.repository.Create(ctx, user); err != nil {
+		return fmt.Errorf("could not create user: %s", err.Error())
+	}
+
+	return nil
 }
 
 func (s *UserEncoded) SignIn(ctx context.Context, userReq core.UserRequest) (string, error) {
-	res := make(chan func() (string, error), 1)
-
-	go func() {
-		user, err := s.repository.GetCredentialsByUsername(ctx, userReq.Username)
-		if err != nil {
-			res <- func() (string, error) {
-				return "", ErrUserNotFound
-			}
-			return
-		}
-
-		if match := s.hasher.CompareHashAndPassword(ctx, user.Password, userReq.Password); !match {
-			res <- func() (string, error) {
-				return "", errors.New("invalid password")
-			}
-			return
-		}
-
-		id, err := s.encoder.EncodeID(ctx, user.ID)
-		if err != nil {
-			res <- func() (string, error) {
-				return "", fmt.Errorf("could not encode user id: %s", err.Error())
-			}
-			return
-		}
-
-		token, err := s.authenticator.GenerateToken(ctx, id)
-		if err != nil {
-			res <- func() (string, error) {
-				return "", fmt.Errorf("could not generate token: %s", err.Error())
-			}
-		}
-
-		res <- func() (string, error) {
-			return token, nil
-		}
-	}()
-
-	select {
-	case <-ctx.Done():
-		return "", ctx.Err()
-	case f := <-res:
-		return f()
+	user, err := s.repository.GetCredentialsByUsername(ctx, userReq.Username)
+	if err != nil {
+		return "", ErrUserNotFound
 	}
+
+	if match := s.hasher.CompareHashAndPassword(user.Password, userReq.Password); !match {
+		return "", errors.New("invalid password")
+	}
+
+	id, err := s.encoder.EncodeID(user.ID)
+	if err != nil {
+		return "", fmt.Errorf("could not encode user id: %s", err.Error())
+	}
+
+	token, err := s.authenticator.GenerateToken(id)
+	if err != nil {
+		return "", fmt.Errorf("could not generate token: %s", err.Error())
+	}
+
+	return token, nil
 }
 
-func (s *UserEncoded) GetID(ctx context.Context, token string) (any, error) {
-	res := make(chan func() (any, error), 1)
-
-	go func() {
-		res <- func() (any, error) {
-			return s.authenticator.ParseToken(ctx, token)
-		}
-	}()
-
-	select {
-	case <-ctx.Done():
-		return nil, ctx.Err()
-	case f := <-res:
-		return f()
-	}
+func (s *UserEncoded) GetID(ctx context.Context, accessToken string) (any, error) {
+	return s.authenticator.ParseToken(accessToken)
 }
 
 func (*UserEncoded) requestToUser(su core.UserRequest) (core.User, error) {
