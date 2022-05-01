@@ -186,7 +186,7 @@ func (s *TodoEncoded) UpdateByID(ctx context.Context, userID, todoID any, todoRe
 
 	id, err := s.repository.UpdateByID(ctx, uintUserID, uintTodoID, todo)
 	if err != nil {
-		return fmt.Errorf("could not update todo: %s", err.Error())
+		return ErrTodoNotFound
 	}
 
 	s.invalidateUserCache(uintUserID, []uint{id})
@@ -213,7 +213,7 @@ func (s *TodoEncoded) PatchByID(ctx context.Context, userID, todoID any, todoReq
 
 	id, err := s.repository.PatchByID(ctx, uintUserID, uintTodoID, todo)
 	if err != nil {
-		return fmt.Errorf("could not patch todo: %s", err.Error())
+		return ErrTodoNotFound
 	}
 
 	s.invalidateUserCache(uintUserID, []uint{id})
@@ -234,7 +234,7 @@ func (s *TodoEncoded) DeleteByID(ctx context.Context, userID, todoID any) error 
 
 	id, err := s.repository.DeleteByID(ctx, uintUserID, uintTodoID)
 	if err != nil {
-		return fmt.Errorf("could not delete todo: %s", err.Error())
+		return ErrTodoNotFound
 	}
 
 	s.invalidateUserCache(uintUserID, []uint{id})

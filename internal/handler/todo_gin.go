@@ -186,7 +186,24 @@ func (h *TodoGin) updateByID(c *gin.Context) {
 		return
 	}
 
-	if err := h.todoService.UpdateByID(ctx, userID, todoID, todoReq); err != nil {
+	err := h.todoService.UpdateByID(ctx, userID, todoID, todoReq)
+
+	switch err {
+	case nil:
+		h.logger.LogFields(logging.InfoLevel, logging.Fields{
+			"user_id": userID,
+			"todo_id": todoID,
+		}, "updated todo by id")
+		c.Status(http.StatusNoContent)
+		return
+	case service.ErrTodoNotFound:
+		h.logger.LogFieldsf(logging.WarnLevel, logging.Fields{
+			"user_id": userID,
+			"todo_id": todoID,
+		}, "could not update todo by id: %s", err.Error())
+		c.AbortWithStatusJSON(http.StatusNotFound, map[string]string{"error": err.Error()})
+		return
+	default:
 		message := "could not update todo by id"
 		h.logger.LogFieldsf(logging.ErrorLevel, logging.Fields{
 			"user_id": userID,
@@ -194,11 +211,6 @@ func (h *TodoGin) updateByID(c *gin.Context) {
 		}, "%s: %s", message, err.Error())
 		c.AbortWithStatusJSON(http.StatusInternalServerError, map[string]string{"error": message})
 	}
-	h.logger.LogFields(logging.InfoLevel, logging.Fields{
-		"user_id": userID,
-		"todo_id": todoID,
-	}, "updated todo by id")
-	c.Status(http.StatusNoContent)
 }
 
 func (h *TodoGin) patchByID(c *gin.Context) {
@@ -226,7 +238,24 @@ func (h *TodoGin) patchByID(c *gin.Context) {
 		return
 	}
 
-	if err := h.todoService.PatchByID(ctx, userID, todoID, todoReq); err != nil {
+	err := h.todoService.PatchByID(ctx, userID, todoID, todoReq)
+
+	switch err {
+	case nil:
+		h.logger.LogFields(logging.InfoLevel, logging.Fields{
+			"user_id": userID,
+			"todo_id": todoID,
+		}, "patched todo by id")
+		c.Status(http.StatusNoContent)
+		return
+	case service.ErrTodoNotFound:
+		h.logger.LogFieldsf(logging.WarnLevel, logging.Fields{
+			"user_id": userID,
+			"todo_id": todoID,
+		}, "could not patch todo by id: %s", err.Error())
+		c.AbortWithStatusJSON(http.StatusNotFound, map[string]string{"error": err.Error()})
+		return
+	default:
 		message := "could not patch todo by id"
 		h.logger.LogFieldsf(logging.ErrorLevel, logging.Fields{
 			"user_id": userID,
@@ -234,12 +263,6 @@ func (h *TodoGin) patchByID(c *gin.Context) {
 		}, "%s: %s", message, err.Error())
 		c.AbortWithStatusJSON(http.StatusInternalServerError, map[string]string{"error": message})
 	}
-
-	h.logger.LogFields(logging.InfoLevel, logging.Fields{
-		"user_id": userID,
-		"todo_id": todoID,
-	}, "patched todo by id")
-	c.Status(http.StatusNoContent)
 }
 
 func (h *TodoGin) deleteByID(c *gin.Context) {
@@ -256,7 +279,24 @@ func (h *TodoGin) deleteByID(c *gin.Context) {
 
 	todoID := c.Param(todoIDKey)
 
-	if err := h.todoService.DeleteByID(ctx, userID, todoID); err != nil {
+	err := h.todoService.DeleteByID(ctx, userID, todoID)
+
+	switch err {
+	case nil:
+		h.logger.LogFields(logging.InfoLevel, logging.Fields{
+			"user_id": userID,
+			"todo_id": todoID,
+		}, "deleted todo by id")
+		c.Status(http.StatusNoContent)
+		return
+	case service.ErrTodoNotFound:
+		h.logger.LogFieldsf(logging.WarnLevel, logging.Fields{
+			"user_id": userID,
+			"todo_id": todoID,
+		}, "could not delete todo by id: %s", err.Error())
+		c.AbortWithStatusJSON(http.StatusNotFound, map[string]string{"error": err.Error()})
+		return
+	default:
 		message := "could not delete todo by id"
 		h.logger.LogFieldsf(logging.ErrorLevel, logging.Fields{
 			"user_id": userID,
@@ -264,12 +304,6 @@ func (h *TodoGin) deleteByID(c *gin.Context) {
 		}, "%s: %s", message, err.Error())
 		c.AbortWithStatusJSON(http.StatusInternalServerError, map[string]string{"error": message})
 	}
-
-	h.logger.LogFields(logging.InfoLevel, logging.Fields{
-		"user_id": userID,
-		"todo_id": todoID,
-	}, "deleted todo by id")
-	c.Status(http.StatusNoContent)
 }
 
 func (h *TodoGin) deleteCompleted(c *gin.Context) {
