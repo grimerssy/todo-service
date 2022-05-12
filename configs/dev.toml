@@ -8,7 +8,6 @@ shutdownseconds = 5
 port = "8080"
 
 [postgres]
-username = "todo_service"
 host = "localhost"
 port = "5001"
 dbname = "todo_service"

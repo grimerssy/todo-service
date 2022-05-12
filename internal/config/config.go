@@ -1,8 +1,6 @@
 package config
 
 import (
-	"os"
-
 	"github.com/grimerssy/todo-service/internal/handler"
 	"github.com/grimerssy/todo-service/internal/server"
 	"github.com/grimerssy/todo-service/pkg/auth"
@@ -11,6 +9,7 @@ import (
 	"github.com/grimerssy/todo-service/pkg/encoding"
 	"github.com/grimerssy/todo-service/pkg/hashing"
 	"github.com/grimerssy/todo-service/pkg/logging"
+	"github.com/joho/godotenv"
 	"github.com/spf13/viper"
 )
 
@@ -30,14 +29,11 @@ type Config struct {
 }
 
 func NewConfig(environment string, logger logging.Logger) *Config {
-	const (
-		jwtSigningStringVar = "JWT"
-		postgresPasswordVar = "POSTGRES"
-	)
-
 	var cfg *Config
+
 	viper.AddConfigPath(configPath)
 	viper.SetConfigName(environment)
+
 	if err := viper.ReadInConfig(); err != nil {
 		logger.Logf(logging.FatalLevel, "could not read configuration: %s", err.Error())
 	}
@@ -45,8 +41,29 @@ func NewConfig(environment string, logger logging.Logger) *Config {
 		logger.Logf(logging.FatalLevel, "could not unmarshal configuration: %s", err.Error())
 	}
 
-	cfg.Postgres.Password = os.Getenv(postgresPasswordVar)
-	cfg.JWT.SigningString = os.Getenv(jwtSigningStringVar)
+	if err := cfg.ApplyEnvVariables(); err != nil {
+		logger.Logf(logging.FatalLevel, "could not read .env file: %s", err.Error())
+	}
 
 	return cfg
+}
+
+func (c *Config) ApplyEnvVariables() error {
+	const (
+		jwtSigningString = "JWT_SIGNING_STRING"
+		postgresUser     = "POSTGRES_USER"
+		postgresPassword = "POSTGRES_PASSWORD"
+	)
+
+	env, err := godotenv.Read()
+	if err != nil {
+		return err
+	}
+
+	c.JWT.SigningString = env[jwtSigningString]
+
+	c.Postgres.Username = env[postgresUser]
+	c.Postgres.Password = env[postgresPassword]
+
+	return nil
 }
