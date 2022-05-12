@@ -10,8 +10,8 @@ port = "8080"
 [postgres]
 username = "todo_service"
 host = "localhost"
-port = "5432"
-dbname = "todo"
+port = "5001"
+dbname = "todo_service"
 sslmode = "disable"
 
 [lfu]
